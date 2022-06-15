@@ -198,9 +198,4 @@ public abstract class CompletionTest extends AbstractLSTest {
             Assert.fail("Service template generator initialization failed!");
         }
     }
-
-    @Override
-    public boolean loadMockedPackages() {
-        return true;
-    }
 }

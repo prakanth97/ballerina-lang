@@ -31,10 +31,9 @@ import io.ballerina.compiler.syntax.tree.SpecificFieldNode;
 import io.ballerina.compiler.syntax.tree.SyntaxKind;
 import io.ballerina.compiler.syntax.tree.Token;
 import org.ballerinalang.langserver.common.utils.CommonUtil;
-import org.ballerinalang.langserver.common.utils.NameUtil;
 import org.ballerinalang.langserver.common.utils.RawTypeSymbolWrapper;
-import org.ballerinalang.langserver.common.utils.RecordUtil;
 import org.ballerinalang.langserver.common.utils.SymbolUtil;
+import org.ballerinalang.langserver.common.utils.completion.QNameReferenceUtil;
 import org.ballerinalang.langserver.commons.BallerinaCompletionContext;
 import org.ballerinalang.langserver.commons.completion.LSCompletionItem;
 import org.ballerinalang.langserver.completions.SnippetCompletionItem;
@@ -42,7 +41,6 @@ import org.ballerinalang.langserver.completions.SymbolCompletionItem;
 import org.ballerinalang.langserver.completions.builder.SpreadFieldCompletionItemBuilder;
 import org.ballerinalang.langserver.completions.providers.AbstractCompletionProvider;
 import org.ballerinalang.langserver.completions.util.ContextTypeResolver;
-import org.ballerinalang.langserver.completions.util.QNameRefCompletionUtil;
 import org.ballerinalang.langserver.completions.util.Snippet;
 import org.ballerinalang.langserver.completions.util.SortingUtil;
 import org.eclipse.lsp4j.CompletionItem;
@@ -108,7 +106,7 @@ public abstract class MappingContextProvider<T extends Node> extends AbstractCom
         if (resolvedType.isEmpty()) {
             return Collections.emptyList();
         }
-        return RecordUtil.getRecordTypeSymbols(resolvedType.get());
+        return CommonUtil.getRecordTypeSymbols(resolvedType.get());
     }
 
     protected List<LSCompletionItem> getVariableCompletionsForFields(BallerinaCompletionContext ctx,
@@ -131,7 +129,7 @@ public abstract class MappingContextProvider<T extends Node> extends AbstractCom
                                                                           QualifiedNameReferenceNode qNameRef) {
         Predicate<Symbol> filter = symbol -> symbol instanceof VariableSymbol
                 || symbol.kind() == SymbolKind.FUNCTION;
-        List<Symbol> moduleContent = QNameRefCompletionUtil.getModuleContent(context, qNameRef, filter);
+        List<Symbol> moduleContent = QNameReferenceUtil.getModuleContent(context, qNameRef, filter);
         return this.getCompletionItemList(moduleContent, context);
     }
 
@@ -156,10 +154,10 @@ public abstract class MappingContextProvider<T extends Node> extends AbstractCom
             validFields.addAll(fields.values());
 
             completionItems.addAll(this.getSpreadFieldCompletionItemsForRecordFields(context, validFields));
-            completionItems.addAll(RecordUtil.getRecordFieldCompletionItems(context, fields, wrapper));
+            completionItems.addAll(CommonUtil.getRecordFieldCompletionItems(context, fields, wrapper));
             if (!fields.values().isEmpty()) {
                 Optional<LSCompletionItem> fillAllStructFieldsItem =
-                        RecordUtil.getFillAllRecordFieldCompletionItems(context, fields, wrapper);
+                        CommonUtil.getFillAllRecordFieldCompletionItems(context, fields, wrapper);
                 fillAllStructFieldsItem.ifPresent(completionItems::add);
             }
             completionItems.addAll(this.getVariableCompletionsForFields(context, fields));
@@ -300,7 +298,7 @@ public abstract class MappingContextProvider<T extends Node> extends AbstractCom
                 typeDescriptor = ((FunctionTypeSymbol) typeDescriptor.get()).returnTypeDescriptor();
             }
             String typeName = (typeDescriptor.isEmpty() || typeDescriptor.get().typeKind() == null) ? "" :
-                    NameUtil.getModifiedTypeName(ctx, typeDescriptor.get());
+                    CommonUtil.getModifiedTypeName(ctx, typeDescriptor.get());
             CompletionItem cItem;
             cItem = SpreadFieldCompletionItemBuilder.build(symbol, typeName, ctx);
             completionItems.add(new SymbolCompletionItem(ctx, symbol, cItem));
@@ -310,7 +308,7 @@ public abstract class MappingContextProvider<T extends Node> extends AbstractCom
     }
 
     protected List<LSCompletionItem> getCompletionsInValueExpressionContext(BallerinaCompletionContext context) {
-        if (QNameRefCompletionUtil.onQualifiedNameIdentifier(context, context.getNodeAtCursor())) {
+        if (QNameReferenceUtil.onQualifiedNameIdentifier(context, context.getNodeAtCursor())) {
             QualifiedNameReferenceNode qNameRef = (QualifiedNameReferenceNode) context.getNodeAtCursor();
             return this.getExpressionsCompletionsForQNameRef(context, qNameRef);
         }

@@ -138,6 +138,15 @@ public class BIntersectionType extends BType implements IntersectionType {
     }
 
     @Override
+    public BIntersectionType getImmutableType() {
+        return Symbols.isFlagOn(this.flags, Flags.READONLY) ? this : null;
+    }
+
+    @Override
+    public void unsetImmutableType() {
+    }
+
+    @Override
     public Optional<BIntersectionType> getIntersectionType() {
         return Optional.ofNullable(this.intersectionType);
     }

@@ -183,10 +183,8 @@ public function main() {
         grades: {
             maths: 80,
             physics: 75,
-            chemistry: 65,
-            "english": 80
-        },
-        "course": "ballerina"
+            chemistry: 65
+        }
     };
 
     Pet pet2 = {

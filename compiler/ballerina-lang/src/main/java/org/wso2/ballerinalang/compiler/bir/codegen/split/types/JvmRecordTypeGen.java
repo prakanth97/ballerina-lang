@@ -28,7 +28,6 @@ import org.wso2.ballerinalang.compiler.bir.codegen.JvmTypeGen;
 import org.wso2.ballerinalang.compiler.bir.codegen.split.JvmConstantsGen;
 import org.wso2.ballerinalang.compiler.bir.codegen.split.JvmCreateTypeGen;
 import org.wso2.ballerinalang.compiler.bir.model.BIRNode;
-import org.wso2.ballerinalang.compiler.semantics.model.SymbolTable;
 import org.wso2.ballerinalang.compiler.semantics.model.types.BField;
 import org.wso2.ballerinalang.compiler.semantics.model.types.BRecordType;
 import org.wso2.ballerinalang.compiler.semantics.model.types.BType;
@@ -95,13 +94,13 @@ public class JvmRecordTypeGen {
         jarEntries.put(recordTypesClass + ".class", jvmPackageGen.getBytes(recordTypesCw, module));
     }
 
-    public void populateRecord(MethodVisitor mv, String methodName, BRecordType bType, SymbolTable symbolTable) {
+    public void populateRecord(MethodVisitor mv, String methodName, BRecordType bType) {
         mv.visitTypeInsn(CHECKCAST, RECORD_TYPE_IMPL);
         mv.visitInsn(DUP);
         mv.visitInsn(DUP);
         addRecordFields(mv, methodName, bType.fields);
         addRecordRestField(mv, bType.restFieldType);
-        jvmCreateTypeGen.addImmutableType(mv, bType, symbolTable);
+        jvmCreateTypeGen.addImmutableType(mv, bType);
     }
 
     /**

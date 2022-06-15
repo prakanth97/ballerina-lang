@@ -34,7 +34,6 @@ import io.ballerina.compiler.syntax.tree.SimpleNameReferenceNode;
 import io.ballerina.compiler.syntax.tree.SyntaxKind;
 import io.ballerina.tools.text.LineRange;
 import org.ballerinalang.langserver.common.utils.CommonUtil;
-import org.ballerinalang.langserver.common.utils.NameUtil;
 import org.ballerinalang.langserver.commons.BallerinaCompletionContext;
 import org.ballerinalang.langserver.commons.completion.LSCompletionItem;
 import org.ballerinalang.langserver.completions.StaticCompletionItem;
@@ -157,7 +156,7 @@ public class ForeachCompletionUtil {
         String type = getTypeOfIteratorVariable(ctx, symbol);
         StringBuilder snippet = new StringBuilder("foreach");
         snippet.append(" ").append(type).append(" ")
-                .append(NameUtil.getValidatedSymbolName(ctx, VAR_NAME)).append(" in ").append(symbolName)
+                .append(CommonUtil.getValidatedSymbolName(ctx, VAR_NAME)).append(" in ").append(symbolName)
                 .append(" ").append("{").append(CommonUtil.LINE_SEPARATOR).append("\t${1}")
                 .append(CommonUtil.LINE_SEPARATOR).append("}");
         String documentation = "foreach statement for iterable variable - " + symbolName;
@@ -178,7 +177,7 @@ public class ForeachCompletionUtil {
         String detail = "foreach int i in 0...expr";
         String label = "foreach i";
         StringBuilder snippet = new StringBuilder("foreach");
-        snippet.append(" int ").append(NameUtil.getValidatedSymbolName(ctx, VAR_NAME_RANGE_EXP))
+        snippet.append(" int ").append(CommonUtil.getValidatedSymbolName(ctx, VAR_NAME_RANGE_EXP))
                 .append(" in ").append("${1:0}").append("...").append(symbolName)
                 .append(".length() ").append("{").append(CommonUtil.LINE_SEPARATOR).append("\t${2}")
                 .append(CommonUtil.LINE_SEPARATOR).append("}");
@@ -205,18 +204,18 @@ public class ForeachCompletionUtil {
                 //TODO: Refactor this specific fix after #31251
                 if (xmlTypeParam.isEmpty() || (xmlTypeParam.get().typeKind() == TypeDescKind.UNION &&
                         ((UnionTypeSymbol) xmlTypeParam.get()).memberTypeDescriptors().size() == 4)) {
-                    type = NameUtil.getModifiedTypeName(ctx, rawType);
+                    type = CommonUtil.getModifiedTypeName(ctx, rawType);
                     break;
                 }
-                type = NameUtil.getModifiedTypeName(ctx, xmlTypeParam.get());
+                type = CommonUtil.getModifiedTypeName(ctx, xmlTypeParam.get());
                 break;
             case ARRAY:
-                type = NameUtil.getModifiedTypeName(ctx, ((ArrayTypeSymbol) rawType).memberTypeDescriptor());
+                type = CommonUtil.getModifiedTypeName(ctx, ((ArrayTypeSymbol) rawType).memberTypeDescriptor());
                 break;
             case TUPLE:
                 List<String> typesSet = new ArrayList<>(((TupleTypeSymbol) rawType).
                         memberTypeDescriptors().stream().map(
-                        tSymbol -> NameUtil.getModifiedTypeName(ctx, tSymbol)).collect(Collectors.toSet()));
+                        tSymbol -> CommonUtil.getModifiedTypeName(ctx, tSymbol)).collect(Collectors.toSet()));
                 if (typesSet.size() == 1) {
                     type = typesSet.get(0);
                 } else {
@@ -224,13 +223,13 @@ public class ForeachCompletionUtil {
                 }
                 break;
             case MAP:
-                type = NameUtil.getModifiedTypeName(ctx, ((MapTypeSymbol) rawType).typeParam());
+                type = CommonUtil.getModifiedTypeName(ctx, ((MapTypeSymbol) rawType).typeParam());
                 break;
             case TABLE:
-                type = NameUtil.getModifiedTypeName(ctx, ((TableTypeSymbol) rawType).rowTypeParameter());
+                type = CommonUtil.getModifiedTypeName(ctx, ((TableTypeSymbol) rawType).rowTypeParameter());
                 break;
             case STREAM:
-                type = NameUtil.getModifiedTypeName(ctx, ((StreamTypeSymbol) rawType).typeParameter());
+                type = CommonUtil.getModifiedTypeName(ctx, ((StreamTypeSymbol) rawType).typeParameter());
                 break;
             case RECORD:
                 //todo: Fix when #30245 is fixed.

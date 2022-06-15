@@ -23,7 +23,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.ballerinalang.langserver.common.utils.CommonUtil;
-import org.ballerinalang.langserver.common.utils.PathUtil;
 import org.ballerinalang.langserver.commons.capability.InitializationOptions;
 import org.ballerinalang.langserver.util.FileUtils;
 import org.ballerinalang.langserver.util.TestUtil;
@@ -103,7 +102,7 @@ public class ReferencesTest {
     
     protected String getReferencesResponseWithinStdLib(Path sourcePath, Position position) 
             throws IOException, URISyntaxException {
-        String fileUri = PathUtil.getUriForPath(sourcePath, getExpectedUriScheme());
+        String fileUri = CommonUtil.getUriForPath(sourcePath, getExpectedUriScheme());
         byte[] encodedContent = Files.readAllBytes(sourcePath);
         TestUtil.openDocument(serviceEndpoint, fileUri, new String(encodedContent));
         String actualStr = TestUtil.getReferencesResponse(sourcePath.toUri().toString(), position, serviceEndpoint);
@@ -178,7 +177,7 @@ public class ReferencesTest {
             URI uri = new URI(fileUri);
             Assert.assertEquals(uri.getScheme(), getExpectedUriScheme(), 
                     String.format("Expected %s: URI scheme", getExpectedUriScheme()));
-            fileUri = PathUtil.convertUriSchemeFromBala(fileUri);
+            fileUri = CommonUtil.convertUriSchemeFromBala(fileUri);
             uri = new URI(fileUri);
             Assert.assertEquals(uri.getScheme(), CommonUtil.URI_SCHEME_FILE,
                     "Expected file URI scheme after conversion");

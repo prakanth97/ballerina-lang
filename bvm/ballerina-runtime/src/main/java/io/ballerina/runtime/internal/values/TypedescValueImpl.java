@@ -29,8 +29,6 @@ import io.ballerina.runtime.internal.util.exceptions.BallerinaException;
 
 import java.util.Map;
 
-import static io.ballerina.runtime.api.utils.TypeUtils.getReferredType;
-
 /**
  * <p>
  * Ballerina runtime value representation of a *type*. This class will be extended by the generated
@@ -85,12 +83,11 @@ public class TypedescValueImpl implements  TypedescValue {
 
     @Override
     public Object instantiate(Strand s, BInitialValueEntry[] initialValues) {
-        Type referredType = getReferredType(this.describingType);
-        if (referredType.getTag() == TypeTags.MAP_TAG) {
-            return new MapValueImpl(referredType, (BMapInitialValueEntry[]) initialValues);
+        if (describingType.getTag() == TypeTags.MAP_TAG) {
+            return new MapValueImpl(describingType, (BMapInitialValueEntry[]) initialValues);
         }
         // This method will be overridden for user-defined types, therefor this line shouldn't be reached.
-        throw new BallerinaException("Given type can't be instantiated at runtime : " + this.describingType);
+        throw new BallerinaException("Given type can't be instantiated at runtime : " + describingType);
     }
 
     @Override

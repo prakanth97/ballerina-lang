@@ -48,7 +48,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -122,12 +121,12 @@ class ModuleContext {
     }
 
     static ModuleContext from(Project project, ModuleConfig moduleConfig) {
-        Map<DocumentId, DocumentContext> srcDocContextMap = new LinkedHashMap<>();
+        Map<DocumentId, DocumentContext> srcDocContextMap = new HashMap<>();
         for (DocumentConfig sourceDocConfig : moduleConfig.sourceDocs()) {
             srcDocContextMap.put(sourceDocConfig.documentId(), DocumentContext.from(sourceDocConfig));
         }
 
-        Map<DocumentId, DocumentContext> testDocContextMap = new LinkedHashMap<>();
+        Map<DocumentId, DocumentContext> testDocContextMap = new HashMap<>();
         for (DocumentConfig testSrcDocConfig : moduleConfig.testSourceDocs()) {
             testDocContextMap.put(testSrcDocConfig.documentId(), DocumentContext.from(testSrcDocConfig));
         }
@@ -351,7 +350,8 @@ class ModuleContext {
 
         ModuleContext resolvedModule = resolvedModuleOptional.get();
         ModuleDependency moduleDependency = new ModuleDependency(
-                new PackageDependency(resolvedModule.moduleId().packageId(), scope), resolvedModule.descriptor());
+                new PackageDependency(resolvedModule.moduleId().packageId(), scope),
+                resolvedModule.moduleId());
         moduleDependencies.add(moduleDependency);
     }
 
@@ -369,7 +369,7 @@ class ModuleContext {
         Module resolvedModule = resolvedModuleOptional.get();
         ModuleDependency moduleDependency = new ModuleDependency(
                 new PackageDependency(resolvedModule.packageInstance().packageId(), scope),
-                resolvedModule.descriptor());
+                resolvedModule.moduleId());
         moduleDependencies.add(moduleDependency);
     }
 
@@ -541,13 +541,13 @@ class ModuleContext {
     }
 
     ModuleContext duplicate(Project project) {
-        Map<DocumentId, DocumentContext> srcDocContextMap = new LinkedHashMap<>();
+        Map<DocumentId, DocumentContext> srcDocContextMap = new HashMap<>();
         for (DocumentId documentId : this.srcDocumentIds()) {
             DocumentContext documentContext = this.documentContext(documentId);
             srcDocContextMap.put(documentId, documentContext.duplicate());
         }
 
-        Map<DocumentId, DocumentContext> testDocContextMap = new LinkedHashMap<>();
+        Map<DocumentId, DocumentContext> testDocContextMap = new HashMap<>();
         for (DocumentId documentId : this.testSrcDocumentIds()) {
             DocumentContext documentContext = this.documentContext(documentId);
             testDocContextMap.put(documentId, documentContext.duplicate());

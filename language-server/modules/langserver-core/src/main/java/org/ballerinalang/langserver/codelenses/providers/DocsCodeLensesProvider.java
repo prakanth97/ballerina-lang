@@ -27,7 +27,7 @@ import org.ballerinalang.annotation.JavaSPIService;
 import org.ballerinalang.langserver.command.docs.DocumentationGenerator;
 import org.ballerinalang.langserver.command.executors.AddDocumentationExecutor;
 import org.ballerinalang.langserver.common.constants.CommandConstants;
-import org.ballerinalang.langserver.common.utils.PositionUtil;
+import org.ballerinalang.langserver.common.utils.CommonUtil;
 import org.ballerinalang.langserver.commons.DocumentServiceContext;
 import org.ballerinalang.langserver.commons.LanguageServerContext;
 import org.ballerinalang.langserver.commons.command.CommandArgument;
@@ -85,21 +85,21 @@ public class DocsCodeLensesProvider extends AbstractCodeLensesProvider {
                             break;
                         }
                     }
-                    nodeRange = PositionUtil.toRange(funcDef.lineRange());
+                    nodeRange = CommonUtil.toRange(funcDef.lineRange());
                     break;
                 case TYPE_DEFINITION:
                     TypeDefinitionNode typeDef = (TypeDefinitionNode) member;
                     showLens = typeDef.visibilityQualifier()
                             .map(s -> s.kind() == SyntaxKind.PUBLIC_KEYWORD)
                             .orElse(false);
-                    nodeRange = PositionUtil.toRange(typeDef.lineRange());
+                    nodeRange = CommonUtil.toRange(typeDef.lineRange());
                     break;
                 case CLASS_DEFINITION:
                     ClassDefinitionNode classDef = (ClassDefinitionNode) member;
                     showLens = classDef.visibilityQualifier()
                             .map(s -> s.kind() == SyntaxKind.PUBLIC_KEYWORD)
                             .orElse(false);
-                    nodeRange = PositionUtil.toRange(classDef.lineRange());
+                    nodeRange = CommonUtil.toRange(classDef.lineRange());
                     break;
                 default:
                     break;

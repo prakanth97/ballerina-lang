@@ -25,7 +25,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 
 /**
  * Represents a generic immutable dependency graph.
@@ -134,7 +133,7 @@ public class DependencyGraph<T> {
         }
 
         List<T> sorted = new ArrayList<>();
-        sortTopologically(new TreeSet<>(dependencies.keySet()), new HashSet<>(), sorted);
+        sortTopologically(dependencies.keySet(), new HashSet<>(), sorted);
         topologicallySortedNodes = Collections.unmodifiableList(sorted);
         return topologicallySortedNodes;
     }
@@ -147,7 +146,7 @@ public class DependencyGraph<T> {
         for (T node : nodesToSort) {
             if (!visited.contains(node)) {
                 visited.add(node);
-                sortTopologically(new TreeSet<>(dependencies.get(node)), visited, sorted);
+                sortTopologically(dependencies.get(node), visited, sorted);
                 sorted.add(node);
             }
         }

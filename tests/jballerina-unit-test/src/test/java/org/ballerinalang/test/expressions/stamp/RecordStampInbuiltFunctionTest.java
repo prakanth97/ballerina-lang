@@ -541,7 +541,7 @@ public class RecordStampInbuiltFunctionTest {
         Assert.assertEquals(
                 ((BMap<String, BString>) ((BError) results).getDetails()).get(StringUtils.fromString("message"))
                         .toString(),
-                "'Teacher' value cannot be converted to 'StringMap': " +
+                "'Teacher' value cannot be converted to 'map<string>': " +
                         "\n\t\tmap field 'age' should be of type 'string', found '25'");
     }
 

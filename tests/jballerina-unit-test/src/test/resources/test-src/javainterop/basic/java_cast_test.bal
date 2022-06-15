@@ -11,15 +11,6 @@ public function testJavaCastFunction() returns string|error {
     return castedValue.toString();
 }
 
-public function testJavaCastFunction2() returns string|error {
-    ArrayList1 arrayList = newArrayList1();
-    StringRef strValue = newString1("cast this object");
-    _ = arrayList.add(strValue);
-    Object1 result = arrayList.get(0);
-    String1 castedValue = check java:cast(result);
-    return castedValue.toString();
-}
-
 // Incorrect Java class cast.
 public function testIncorrectJavaCast() returns string|error {
     String1 strValue = newString1("cast this object");
@@ -104,8 +95,6 @@ public class String1 {
         return java:toString(self.jObj) ?: "null";
     }
 }
-
-type StringRef String1;
 
 // Object Case1: Correct object
 @java:Binding {

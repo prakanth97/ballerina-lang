@@ -30,6 +30,8 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static org.ballerinalang.langserver.common.utils.CommonUtil.getModulePrefix;
+
 /**
  * Function generator utilities.
  */
@@ -78,7 +80,7 @@ public class FunctionGenerator {
             newText.append(text, nextStart, matcher.start(1));
             // Append module prefix(empty when in same module) and identify imports
             ModuleID moduleID = CodeActionModuleId.from(matcher.group(1), matcher.group(2), matcher.group(3));
-            newText.append(ModuleUtil.getModulePrefix(importsAcceptor, currentModuleID, moduleID, context));
+            newText.append(getModulePrefix(importsAcceptor, currentModuleID, moduleID, context));
             // Update next-start position
             nextStart = matcher.end(3) + 1;
         }
@@ -145,8 +147,7 @@ public class FunctionGenerator {
             // returns clause
             returnsClause = "returns " + returnType;
             // return statement
-            Optional<String> defaultReturnValue = DefaultValueGenerationUtil
-                    .getDefaultValueForTypeDescKind(returnTypeDescKind);
+            Optional<String> defaultReturnValue = CommonUtil.getDefaultValueForTypeDescKind(returnTypeDescKind);
             if (defaultReturnValue.isPresent()) {
                 returnStmt = "return " + defaultReturnValue.get() + CommonKeys.SEMI_COLON_SYMBOL_KEY;
             }
@@ -179,7 +180,7 @@ public class FunctionGenerator {
             // returns clause
             returnsClause = "returns " + returnType;
             // return statement
-            Optional<String> defaultReturnValue = DefaultValueGenerationUtil.getDefaultValueForType(returnTypeSymbol);
+            Optional<String> defaultReturnValue = CommonUtil.getDefaultValueForType(returnTypeSymbol);
             if (defaultReturnValue.isPresent()) {
                 returnStmt = "return " + defaultReturnValue.get() + CommonKeys.SEMI_COLON_SYMBOL_KEY;
             }

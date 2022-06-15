@@ -39,7 +39,6 @@ import io.ballerina.projects.util.ProjectConstants;
 
 import java.nio.file.Path;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -216,7 +215,6 @@ public class PackageConfigCreator {
     private static List<DocumentConfig> getDocumentConfigs(ModuleId moduleId, List<DocumentData> documentData) {
         return documentData
                 .stream()
-                .sorted(Comparator.comparing(DocumentData::name))
                 .map(srcDoc -> createDocumentConfig(srcDoc, moduleId))
                 .collect(Collectors.toList());
     }

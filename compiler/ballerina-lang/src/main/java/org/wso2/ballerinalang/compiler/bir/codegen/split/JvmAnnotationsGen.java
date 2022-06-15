@@ -60,16 +60,13 @@ public class JvmAnnotationsGen {
     private final String annotationsClass;
     private final JvmPackageGen jvmPackageGen;
     private final JvmTypeGen jvmTypeGen;
-    private final JvmConstantsGen jvmConstantsGen;
     private final BIRNode.BIRPackage module;
 
-    public JvmAnnotationsGen(BIRNode.BIRPackage module, JvmPackageGen jvmPackageGen, JvmTypeGen jvmTypeGen,
-                             JvmConstantsGen jvmConstantsGen) {
+    public JvmAnnotationsGen(BIRNode.BIRPackage module, JvmPackageGen jvmPackageGen, JvmTypeGen jvmTypeGen) {
         this.annotationsClass = getModuleLevelClassName(module.packageID, MODULE_ANNOTATIONS_CLASS_NAME);
         this.jvmPackageGen = jvmPackageGen;
         this.jvmTypeGen = jvmTypeGen;
         this.module = module;
-        this.jvmConstantsGen = jvmConstantsGen;
     }
 
     public void generateAnnotationsClass(Map<String, byte[]> jarEntries) {
@@ -136,12 +133,7 @@ public class JvmAnnotationsGen {
     }
 
     void loadLocalType(MethodVisitor mv, BIRNode.BIRTypeDefinition typeDefinition, JvmTypeGen jvmTypeGen) {
-        if (typeDefinition.type.tag == TypeTags.TYPEREFDESC) {
-            jvmConstantsGen.generateGetBTypeRefType(mv, jvmConstantsGen.getTypeConstantsVar(typeDefinition.type,
-                                                                                            jvmPackageGen.symbolTable));
-        } else {
-            jvmTypeGen.loadType(mv, typeDefinition.type);
-        }
+        jvmTypeGen.loadType(mv, typeDefinition.type);
     }
 
 }

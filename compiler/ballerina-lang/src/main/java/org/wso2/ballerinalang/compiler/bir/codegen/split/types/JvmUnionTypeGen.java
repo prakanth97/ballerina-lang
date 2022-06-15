@@ -26,7 +26,6 @@ import org.wso2.ballerinalang.compiler.bir.codegen.JvmTypeGen;
 import org.wso2.ballerinalang.compiler.bir.codegen.split.JvmConstantsGen;
 import org.wso2.ballerinalang.compiler.bir.codegen.split.JvmCreateTypeGen;
 import org.wso2.ballerinalang.compiler.bir.model.BIRNode;
-import org.wso2.ballerinalang.compiler.semantics.model.SymbolTable;
 import org.wso2.ballerinalang.compiler.semantics.model.symbols.BTypeSymbol;
 import org.wso2.ballerinalang.compiler.semantics.model.types.BUnionType;
 
@@ -119,15 +118,14 @@ public class JvmUnionTypeGen {
         }
     }
 
-    public void populateUnion(ClassWriter cw, MethodVisitor mv, BUnionType bType, String className, String name,
-                              SymbolTable symbolTable) {
+    public void populateUnion(ClassWriter cw, MethodVisitor mv, BUnionType bType, String className, String name) {
         mv.visitTypeInsn(CHECKCAST, UNION_TYPE_IMPL);
         mv.visitInsn(DUP);
         mv.visitInsn(DUP);
 
         // populate member fields
         addUnionMembers(cw, mv, bType, className, name);
-        jvmCreateTypeGen.addImmutableType(mv, bType, symbolTable);
+        jvmCreateTypeGen.addImmutableType(mv, bType);
     }
 
     /**

@@ -75,17 +75,11 @@ public abstract class AbstractLSTest {
         }
     }
 
-    public boolean loadMockedPackages() {
-        return false;
-    }
-
     @BeforeClass
     public void init() throws Exception {
         this.languageServer = new BallerinaLanguageServer();
         this.serviceEndpoint = TestUtil.initializeLanguageSever(this.languageServer);
-        if (this.loadMockedPackages()) {
-            setUp();
-        }
+        setUp();
     }
 
     public void setUp() {
@@ -114,15 +108,12 @@ public abstract class AbstractLSTest {
     public void cleanMocks() {
         if (this.lsPackageLoader != null) {
             Mockito.reset(this.lsPackageLoader);
-            this.lsPackageLoader = null;
         }
     }
 
     @AfterClass
     public void shutDownLanguageServer() {
         TestUtil.shutdownLanguageServer(this.serviceEndpoint);
-        this.languageServer = null;
-        this.serviceEndpoint = null;
     }
 
     public BallerinaLanguageServer getLanguageServer() {

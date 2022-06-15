@@ -36,6 +36,7 @@ public class BArrayType extends BType implements ArrayType {
     private static final String SEMI_COLON = ";";
 
     public BType eType;
+    public BIntersectionType immutableType;
 
     public int size = -1;
 
@@ -110,6 +111,16 @@ public class BArrayType extends BType implements ArrayType {
             }
         }
         return !Symbols.isFlagOn(flags, Flags.READONLY) ? sb.toString() : sb.append(" & readonly").toString();
+    }
+
+    @Override
+    public BIntersectionType getImmutableType() {
+        return this.immutableType;
+    }
+
+    @Override
+    public void unsetImmutableType() {
+        this.immutableType = null;
     }
 
     @Override

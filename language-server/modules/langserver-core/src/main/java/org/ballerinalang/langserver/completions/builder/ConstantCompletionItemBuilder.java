@@ -21,7 +21,6 @@ import io.ballerina.compiler.api.symbols.ConstantSymbol;
 import io.ballerina.compiler.api.symbols.Documentation;
 import io.ballerina.compiler.api.symbols.SymbolKind;
 import org.ballerinalang.langserver.common.utils.CommonUtil;
-import org.ballerinalang.langserver.common.utils.NameUtil;
 import org.ballerinalang.langserver.commons.CompletionContext;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionItemKind;
@@ -50,7 +49,7 @@ public class ConstantCompletionItemBuilder {
         CompletionItem completionItem = new CompletionItem();
         completionItem.setLabel(name);
         completionItem.setInsertText(name);
-        completionItem.setDetail(NameUtil.getModifiedTypeName(context, constantSymbol.typeDescriptor()));
+        completionItem.setDetail(CommonUtil.getModifiedTypeName(context, constantSymbol.typeDescriptor()));
         completionItem.setDocumentation(getDocumentation(constantSymbol));
 
         if (constantSymbol.kind() == SymbolKind.ENUM_MEMBER) {

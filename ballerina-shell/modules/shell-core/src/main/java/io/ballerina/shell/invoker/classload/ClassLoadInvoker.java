@@ -28,7 +28,6 @@ import io.ballerina.projects.ModuleId;
 import io.ballerina.projects.PackageCompilation;
 import io.ballerina.projects.Project;
 import io.ballerina.shell.exceptions.InvokerException;
-import io.ballerina.shell.invoker.AvailableVariable;
 import io.ballerina.shell.invoker.ShellSnippetsInvoker;
 import io.ballerina.shell.invoker.classload.context.ClassLoadContext;
 import io.ballerina.shell.invoker.classload.context.StatementContext;
@@ -124,20 +123,6 @@ public class ClassLoadInvoker extends ShellSnippetsInvoker {
     private List<ExecutableSnippet> executableSnippets;
     private List<Identifier> variableNames;
     private Project project;
-    /**
-     * Stores all the newly found variable names.
-     *
-     * Introduced in order to collect new defined variables to support Ballerina
-     * VSCode Notebook.
-     */
-    private final List<String> newDefinedVariableNames;
-    /**
-     * Stores all the newly found module declarations.
-     *
-     * Introduced in order to collect new module declarations to support Ballerina
-     * VSCode Notebook.
-     */
-    private final List<String> newModuleDeclnNames;
 
     /**
      * Creates a class load invoker from the given ballerina home.
@@ -152,8 +137,6 @@ public class ClassLoadInvoker extends ShellSnippetsInvoker {
         this.newImports = new HashMap<>();
         this.initialIdentifiers = new HashSet<>();
         this.importsManager = new ImportsManager();
-        this.newDefinedVariableNames = new ArrayList<>();
-        this.newModuleDeclnNames = new ArrayList<>();
     }
 
     /**
@@ -204,9 +187,6 @@ public class ClassLoadInvoker extends ShellSnippetsInvoker {
         }
 
         newImports.clear();
-        // As this is a new execution of a code snippet clear out the defined vars and module declarations
-        // stored by the previous execution
-        clearPreviousVariablesAndModuleDclnsNames();
 
         // TODO: (#28036) Fix the closure bug.
 
@@ -293,8 +273,6 @@ public class ClassLoadInvoker extends ShellSnippetsInvoker {
                     snippet.isDeclaredWithVar());
             allNewVariables.putAll(newVariables);
         }
-        // put names of new defined vars to list
-        allNewVariables.keySet().forEach(id -> newDefinedVariableNames.add(id.getName()));
         // Persist all data
         globalVars.putAll(allNewVariables);
         newImports.forEach(importsManager::storeImportUsages);
@@ -303,7 +281,6 @@ public class ClassLoadInvoker extends ShellSnippetsInvoker {
         for (Map.Entry<Identifier, ModuleMemberDeclarationSnippet> dcln : moduleDeclarations.entrySet()) {
             String moduleDclnCode = dcln.getValue().toString();
             moduleDclns.put(dcln.getKey(), moduleDclnCode);
-            newModuleDeclnNames.add(dcln.getKey().getName());
             addDebugDiagnostic("Module dcln name: " + dcln.getKey());
             addDebugDiagnostic("Module dcln code: " + moduleDclnCode);
         }
@@ -324,8 +301,6 @@ public class ClassLoadInvoker extends ShellSnippetsInvoker {
             allNewVariables.keySet().forEach(id -> identifiersToDelete.add(id.getName()));
             moduleDeclarations.keySet().forEach(id -> identifiersToDelete.add(id.getName()));
             delete(identifiersToDelete);
-            // clear out new declarations
-            clearPreviousVariablesAndModuleDclnsNames();
             throw e;
         }
     }
@@ -613,19 +588,6 @@ public class ClassLoadInvoker extends ShellSnippetsInvoker {
     }
 
     @Override
-    public List<AvailableVariable> availableVariablesAsObjects() {
-        List<AvailableVariable> varMap = new ArrayList<>();
-        for (GlobalVariable entry : globalVars.values()) {
-            String type = entry.getType();
-            Object obj = InvokerMemory.recall(contextId, entry.getVariableName().getName());
-            String objStr = StringUtils.getExpressionStringValue(obj);
-            AvailableVariable varObject = new AvailableVariable(entry.getVariableName().toString(), type, objStr);
-            varMap.add(varObject);
-        }
-        return varMap;
-    }
-
-    @Override
     public List<String> availableModuleDeclarations() {
         // Module level dclns.
         List<String> moduleDclnStrings = new ArrayList<>();
@@ -635,22 +597,6 @@ public class ClassLoadInvoker extends ShellSnippetsInvoker {
             moduleDclnStrings.add(varString);
         }
         return moduleDclnStrings;
-    }
-
-    @Override
-    public List<String> newVariableNames() {
-        return newDefinedVariableNames;
-    }
-
-    @Override
-    public List<String> newModuleDeclarations() {
-        return newModuleDeclnNames;
-    }
-
-    @Override
-    public void clearPreviousVariablesAndModuleDclnsNames() {
-        newDefinedVariableNames.clear();
-        newModuleDeclnNames.clear();
     }
 
     /**

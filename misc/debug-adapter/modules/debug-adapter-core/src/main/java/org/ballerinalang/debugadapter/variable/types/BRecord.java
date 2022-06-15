@@ -16,21 +16,16 @@
 
 package org.ballerinalang.debugadapter.variable.types;
 
-import com.sun.jdi.ArrayReference;
-import com.sun.jdi.Method;
+import com.sun.jdi.Field;
 import com.sun.jdi.ObjectReference;
 import com.sun.jdi.Value;
-import io.ballerina.identifier.Utils;
 import org.ballerinalang.debugadapter.SuspendedContext;
 import org.ballerinalang.debugadapter.variable.BVariableType;
 import org.ballerinalang.debugadapter.variable.NamedCompoundVariable;
 import org.ballerinalang.debugadapter.variable.VariableUtils;
 
-import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import static org.ballerinalang.debugadapter.variable.VariableUtils.UNKNOWN_VALUE;
 
@@ -39,12 +34,7 @@ import static org.ballerinalang.debugadapter.variable.VariableUtils.UNKNOWN_VALU
  */
 public class BRecord extends NamedCompoundVariable {
 
-    private static final String GETKEYS_METHOD_SIGNATURE_PATTERN = ".*Object;$";
-    private static final String GET_METHOD_SIGNATURE_PATTERN = "\\(Ljava/lang/Object;\\)Ljava/lang/Object;";
-    private static final String METHOD_GET_KEYS = "getKeys";
-    private static final String METHOD_GET = "get";
-
-    private ArrayReference loadedKeys = null;
+    private static final String RECORD_FIELD_PATTERN_IDENTIFIER = "$value$";
 
     public BRecord(SuspendedContext context, String name, Value value) {
         super(context, name, BVariableType.RECORD, value);
@@ -65,62 +55,17 @@ public class BRecord extends NamedCompoundVariable {
             if (!(jvmValue instanceof ObjectReference)) {
                 return new LinkedHashMap<>();
             }
-
-            Map<String, Value> childVarMap = new LinkedHashMap<>();
-            Map<Value, Value> recordFields = getRecordFields();
-
-            for (Map.Entry<Value, Value> mapEntry : recordFields.entrySet()) {
-                childVarMap.put(Utils.encodeNonFunctionIdentifier(
-                        Utils.escapeSpecialCharacters(VariableUtils.getStringFrom(mapEntry.getKey()))),
-                        mapEntry.getValue());
-            }
-            return childVarMap;
-        } catch (Exception ignored) {
-            return new LinkedHashMap<>();
-        }
-    }
-
-    private Map<Value, Value> getRecordFields() {
-        try {
-            loadAllKeys();
-            Map<Value, Value> recordFields = new LinkedHashMap<>();
-            List<Value> keysRange = loadedKeys.getValues(0, loadedKeys.length());
-
-            for (int i = 0; i < loadedKeys.length(); i++) {
-                Value key = keysRange.get(i);
-                recordFields.put(key, getValueFor(key));
-            }
+            ObjectReference jvmValueRef = (ObjectReference) jvmValue;
+            Map<Field, Value> fieldValueMap = jvmValueRef.getValues(jvmValueRef.referenceType().allFields());
+            Map<String, Value> recordFields = new LinkedHashMap<>();
+            fieldValueMap.forEach((field, value) -> {
+                if (field.toString().contains(RECORD_FIELD_PATTERN_IDENTIFIER)) {
+                    recordFields.put(field.name(), value);
+                }
+            });
             return recordFields;
         } catch (Exception ignored) {
-            return null;
-        }
-    }
-
-    private void loadAllKeys() {
-        if (loadedKeys == null) {
-            try {
-                Optional<Method> getKeysMethod = VariableUtils.getMethod(jvmValue, METHOD_GET_KEYS,
-                        GETKEYS_METHOD_SIGNATURE_PATTERN);
-                Value keyArray = ((ObjectReference) jvmValue).invokeMethod(
-                        context.getOwningThread().getThreadReference(), getKeysMethod.get(), Collections.emptyList(),
-                        ObjectReference.INVOKE_SINGLE_THREADED);
-                loadedKeys = (ArrayReference) keyArray;
-            } catch (Exception ignored) {
-                loadedKeys = null;
-            }
-        }
-    }
-
-    private Value getValueFor(Value key) {
-        try {
-            Optional<Method> getMethod = VariableUtils.getMethod(jvmValue, METHOD_GET, GET_METHOD_SIGNATURE_PATTERN);
-            if (getMethod.isEmpty()) {
-                return null;
-            }
-            return ((ObjectReference) jvmValue).invokeMethod(context.getOwningThread().getThreadReference(),
-                    getMethod.get(), Collections.singletonList(key), ObjectReference.INVOKE_SINGLE_THREADED);
-        } catch (Exception ignored) {
-            return null;
+            return new LinkedHashMap<>();
         }
     }
 
@@ -130,8 +75,14 @@ public class BRecord extends NamedCompoundVariable {
             if (!(jvmValue instanceof ObjectReference)) {
                 return 0;
             }
-            loadAllKeys();
-            return loadedKeys == null ? 0 : loadedKeys.length();
+            ObjectReference jvmValueRef = (ObjectReference) jvmValue;
+            Map<Field, Value> fieldValueMap = jvmValueRef.getValues(jvmValueRef.referenceType().allFields());
+            long recordFieldCount = fieldValueMap.keySet()
+                    .stream()
+                    .filter(field -> field.toString().contains(RECORD_FIELD_PATTERN_IDENTIFIER))
+                    .count();
+
+            return Long.valueOf(recordFieldCount).intValue();
         } catch (Exception ignored) {
             return 0;
         }

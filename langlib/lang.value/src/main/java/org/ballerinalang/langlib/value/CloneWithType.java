@@ -56,7 +56,6 @@ import java.util.Map;
 import java.util.Set;
 
 import static io.ballerina.runtime.api.creators.ErrorCreator.createError;
-import static io.ballerina.runtime.api.utils.TypeUtils.getReferredType;
 import static io.ballerina.runtime.internal.ErrorUtils.createConversionError;
 import static io.ballerina.runtime.internal.util.exceptions.BallerinaErrorReasons.VALUE_LANG_LIB_CONVERSION_ERROR;
 import static io.ballerina.runtime.internal.util.exceptions.BallerinaErrorReasons.VALUE_LANG_LIB_CYCLIC_VALUE_REFERENCE_ERROR;
@@ -69,7 +68,13 @@ import static io.ballerina.runtime.internal.util.exceptions.BallerinaErrorReason
 public class CloneWithType {
 
     public static Object cloneWithType(Object v, BTypedesc t) {
-        return convert(t.getDescribingType(), v, t);
+        Type describingType = t.getDescribingType();
+        // typedesc<json>.constructFrom like usage
+        if (describingType.getTag() == TypeTags.TYPEDESC_TAG) {
+            return convert(((TypedescType) t.getDescribingType()).getConstraint(), v, t);
+        }
+        // json.constructFrom like usage
+        return convert(describingType, v, t);
     }
 
     public static Object convert(Type convertType, Object inputValue) {
@@ -95,7 +100,7 @@ public class CloneWithType {
     private static Object convert(Object value, Type targetType, List<TypeValuePair> unresolvedValues,
                                   boolean allowAmbiguity, BTypedesc t) {
         if (value == null) {
-            if (getTargetFromTypeDesc(targetType).isNilable()) {
+            if (targetType.isNilable()) {
                 return null;
             }
             return createError(VALUE_LANG_LIB_CONVERSION_ERROR,
@@ -129,14 +134,6 @@ public class CloneWithType {
         }
 
         return convert((BRefValue) value, matchingType, unresolvedValues, t);
-    }
-
-    private static Type getTargetFromTypeDesc(Type targetType) {
-        Type referredType = getReferredType(targetType);
-        if (referredType.getTag() == TypeTags.TYPEDESC_TAG) {
-            return ((TypedescType) referredType).getConstraint();
-        }
-        return targetType;
     }
 
     private static Object convert(BRefValue value, Type targetType, List<TypeValuePair> unresolvedValues,

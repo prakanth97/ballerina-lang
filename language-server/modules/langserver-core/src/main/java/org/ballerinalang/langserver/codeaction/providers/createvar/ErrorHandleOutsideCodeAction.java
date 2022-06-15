@@ -25,7 +25,6 @@ import org.ballerinalang.langserver.codeaction.CodeActionUtil;
 import org.ballerinalang.langserver.codeaction.providers.AbstractCodeActionProvider;
 import org.ballerinalang.langserver.common.constants.CommandConstants;
 import org.ballerinalang.langserver.common.utils.CommonUtil;
-import org.ballerinalang.langserver.common.utils.PositionUtil;
 import org.ballerinalang.langserver.commons.CodeActionContext;
 import org.ballerinalang.langserver.commons.codeaction.spi.DiagBasedPositionDetails;
 import org.eclipse.lsp4j.CodeAction;
@@ -92,7 +91,7 @@ public class ErrorHandleOutsideCodeAction extends CreateVariableCodeAction {
         edits.addAll(getModifiedCreateVarTextEdits(diagnostic, unionTypeDesc, positionDetails,
                 typeSymbol.get(), context));
         edits.addAll(CodeActionUtil.getAddCheckTextEdits(
-                PositionUtil.toRange(diagnostic.location().lineRange()).getStart(),
+                CommonUtil.toRange(diagnostic.location().lineRange()).getStart(),
                 positionDetails.matchedNode(), context));
 
         String commandTitle = CommandConstants.CREATE_VAR_ADD_CHECK_TITLE;
@@ -113,7 +112,7 @@ public class ErrorHandleOutsideCodeAction extends CreateVariableCodeAction {
         List<TextEdit> edits = new ArrayList<>();
 
         // Add create variable edits
-        Range range = PositionUtil.toRange(diagnostic.location().lineRange());
+        Range range = CommonUtil.toRange(diagnostic.location().lineRange());
         CreateVariableOut createVarTextEdits = getCreateVariableTextEdits(range, positionDetails, typeSymbol, context);
 
         // Change and add type text edit

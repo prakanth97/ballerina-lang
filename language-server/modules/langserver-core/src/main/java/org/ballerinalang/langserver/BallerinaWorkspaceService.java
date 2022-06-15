@@ -32,8 +32,7 @@ import io.ballerina.tools.text.TextRange;
 import org.ballerinalang.langserver.command.CommandUtil;
 import org.ballerinalang.langserver.command.LSCommandExecutorProvidersHolder;
 import org.ballerinalang.langserver.common.constants.CommandConstants;
-import org.ballerinalang.langserver.common.utils.PathUtil;
-import org.ballerinalang.langserver.common.utils.PositionUtil;
+import org.ballerinalang.langserver.common.utils.CommonUtil;
 import org.ballerinalang.langserver.commons.DidChangeWatchedFilesContext;
 import org.ballerinalang.langserver.commons.ExecuteCommandContext;
 import org.ballerinalang.langserver.commons.LanguageServerContext;
@@ -187,7 +186,7 @@ public class BallerinaWorkspaceService implements WorkspaceService {
             }
         }
 
-        Optional<Path> filePath = PathUtil.getPathFromURI(uri);
+        Optional<Path> filePath = CommonUtil.getPathFromURI(uri);
         if (filePath.isEmpty()) {
             return Collections.emptyList();
         }
@@ -209,7 +208,7 @@ public class BallerinaWorkspaceService implements WorkspaceService {
 
         List<Either<TextDocumentEdit, ResourceOperation>> edits = new LinkedList<>();
         docEdits.forEach(docEdit -> {
-            Optional<SyntaxTree> originalST = PathUtil.getPathFromURI(docEdit.getFileUri())
+            Optional<SyntaxTree> originalST = CommonUtil.getPathFromURI(docEdit.getFileUri())
                     .flatMap(workspaceManagerProxy.get()::document)
                     .flatMap(doc -> Optional.of(doc.syntaxTree()));
             if (originalST.isEmpty()) {
@@ -221,7 +220,7 @@ public class BallerinaWorkspaceService implements WorkspaceService {
             LinePosition startPos = textDocument.linePositionFrom(textRange.startOffset());
             LinePosition endPos = textDocument.linePositionFrom(textRange.endOffset());
             LineRange lineRange = LineRange.from(originalST.get().filePath(), startPos, endPos);
-            Range range = PositionUtil.toRange(LineRange.from(docEdit.getFileUri(), 
+            Range range = CommonUtil.toRange(LineRange.from(docEdit.getFileUri(), 
                     lineRange.startLine(), lineRange.endLine()));
             TextEdit edit = new TextEdit(range, docEdit.getModifiedSyntaxTree().toSourceCode());
             TextDocumentEdit documentEdit = new TextDocumentEdit(new VersionedTextDocumentIdentifier(

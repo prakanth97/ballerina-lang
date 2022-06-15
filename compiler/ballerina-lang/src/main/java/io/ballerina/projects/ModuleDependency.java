@@ -26,19 +26,19 @@ import java.util.Objects;
  */
 public class ModuleDependency {
     private final PackageDependency packageDependency;
-    private final ModuleDescriptor moduleDescriptor;
+    private final ModuleId moduleId;
 
-    public ModuleDependency(PackageDependency packageDependency, ModuleDescriptor moduleDescriptor) {
+    public ModuleDependency(PackageDependency packageDependency, ModuleId moduleId) {
         this.packageDependency = packageDependency;
-        this.moduleDescriptor = moduleDescriptor;
+        this.moduleId = moduleId;
     }
 
     public PackageDependency packageDependency() {
         return packageDependency;
     }
 
-    public ModuleDescriptor descriptor() {
-        return moduleDescriptor;
+    public ModuleId moduleId() {
+        return moduleId;
     }
 
     @Override
@@ -53,11 +53,11 @@ public class ModuleDependency {
 
         ModuleDependency that = (ModuleDependency) o;
         return packageDependency.equals(that.packageDependency) &&
-                moduleDescriptor.equals(that.moduleDescriptor);
+                moduleId.equals(that.moduleId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(packageDependency, moduleDescriptor);
+        return Objects.hash(packageDependency, moduleId);
     }
 }

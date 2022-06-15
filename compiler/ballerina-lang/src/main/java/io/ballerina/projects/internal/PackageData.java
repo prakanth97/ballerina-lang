@@ -18,7 +18,7 @@
 package io.ballerina.projects.internal;
 
 import io.ballerina.projects.DependencyGraph;
-import io.ballerina.projects.ModuleDescriptor;
+import io.ballerina.projects.ModuleId;
 import io.ballerina.projects.PackageDescriptor;
 
 import java.nio.file.Path;
@@ -36,7 +36,7 @@ public class PackageData {
     private final ModuleData defaultModule;
     private final List<ModuleData> otherModules;
     private final DependencyGraph<PackageDescriptor> packageDesDependencyGraph;
-    private final DependencyGraph<ModuleDescriptor> moduleDependencyGraph;
+    private final DependencyGraph<ModuleId> moduleDependencyGraph;
     private final DocumentData ballerinaToml;
     private final DocumentData dependenciesToml;
     private final DocumentData cloudToml;
@@ -48,7 +48,7 @@ public class PackageData {
                         ModuleData defaultModule,
                         List<ModuleData> otherModules,
                         DependencyGraph<PackageDescriptor> packageDesDependencyGraph,
-                        DependencyGraph<ModuleDescriptor> moduleDependencyGraph,
+                        DependencyGraph<ModuleId> moduleDependencyGraph,
                         DocumentData ballerinaToml,
                         DocumentData dependenciesToml,
                         DocumentData cloudToml,
@@ -83,7 +83,7 @@ public class PackageData {
                                    ModuleData defaultModule,
                                    List<ModuleData> otherModules,
                                    DependencyGraph<PackageDescriptor> packageDesDependencyGraph,
-                                   DependencyGraph<ModuleDescriptor> moduleDependencyGraph,
+                                   DependencyGraph<ModuleId> moduleDependencyGraph,
                                    DocumentData ballerinaToml,
                                    DocumentData dependenciesToml,
                                    DocumentData cloudToml,
@@ -109,7 +109,7 @@ public class PackageData {
         return packageDesDependencyGraph;
     }
 
-    public DependencyGraph<ModuleDescriptor> moduleDependencyGraph() {
+    public DependencyGraph<ModuleId> moduleDependencyGraph() {
         return moduleDependencyGraph;
     }
 

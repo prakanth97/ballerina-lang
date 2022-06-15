@@ -45,6 +45,7 @@ public class BJSONType extends BUnionType {
         super(type.tsymbol, new LinkedHashSet<>(INITIAL_CAPACITY), type.isNullable(), Symbols.isFlagOn(type.flags,
                 Flags.READONLY));
         mergeUnionType(type);
+        this.immutableType = type.immutableType;
         this.tag = TypeTags.JSON;
     }
 

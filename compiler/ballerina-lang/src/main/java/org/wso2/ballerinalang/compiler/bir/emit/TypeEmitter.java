@@ -212,7 +212,7 @@ class TypeEmitter {
     private static String emitTypeRefDesc(BTypeReferenceType bType, int tabs) {
         String str = "typeRefDesc";
         str += "<";
-        str += getTypeName(bType);
+        str += emitTypeRef(bType.referredType, 0);
         str += ">";
         return str;
     }
@@ -455,7 +455,7 @@ class TypeEmitter {
         if (bType.tag == TypeTags.RECORD || bType.tag == TypeTags.OBJECT) {
             return bType.tsymbol.toString();
         }
-        return emitType(type, tabs);
+        return emitType(bType, tabs);
     }
 }
 

@@ -1017,10 +1017,6 @@ public class SymbolResolver extends BLangNodeTransformer<SymbolResolver.Analyzer
             }
             BUnionType type = (BUnionType) Types.getReferredType(entry.symbol.type);
             symTable.anydataType = new BAnydataType(type);
-            Optional<BIntersectionType> immutableType = Types.getImmutableType(symTable, PackageID.ANNOTATIONS, type);
-            if (immutableType.isPresent()) {
-                Types.addImmutableType(symTable, PackageID.ANNOTATIONS, symTable.anydataType, immutableType.get());
-            }
             symTable.anydataOrReadonly = BUnionType.create(null, symTable.anydataType, symTable.readonlyType);
             entry.symbol.type = symTable.anydataType;
             entry.symbol.origin = BUILTIN;
@@ -1041,11 +1037,6 @@ public class SymbolResolver extends BLangNodeTransformer<SymbolResolver.Analyzer
             }
             BUnionType type = (BUnionType) Types.getReferredType(entry.symbol.type);
             symTable.jsonType = new BJSONType(type);
-            Optional<BIntersectionType> immutableType = Types.getImmutableType(symTable, PackageID.ANNOTATIONS,
-                                                                               type);
-            if (immutableType.isPresent()) {
-                Types.addImmutableType(symTable, PackageID.ANNOTATIONS, symTable.jsonType, immutableType.get());
-            }
             symTable.jsonType.tsymbol = new BTypeSymbol(SymTag.TYPE, Flags.PUBLIC, Names.JSON, PackageID.ANNOTATIONS,
                     symTable.jsonType, symTable.langAnnotationModuleSymbol, symTable.builtinPos, BUILTIN);
             entry.symbol.type = symTable.jsonType;
@@ -2367,9 +2358,8 @@ public class SymbolResolver extends BLangNodeTransformer<SymbolResolver.Analyzer
             return potentialIntersectionType;
         }
 
-        PackageID packageID = data.env.enclPkg.packageID;
-        if (!types.isSelectivelyImmutableType(potentialIntersectionType, false, packageID)) {
-            if (types.isSelectivelyImmutableType(potentialIntersectionType, packageID)) {
+        if (!types.isSelectivelyImmutableType(potentialIntersectionType, false)) {
+            if (types.isSelectivelyImmutableType(potentialIntersectionType)) {
                 // This intersection would have been valid if not for `readonly object`s.
                 dlog.error(intersectionTypeNode.pos, DiagnosticErrorCode.INVALID_READONLY_OBJECT_INTERSECTION_TYPE);
             } else {
@@ -2431,7 +2421,8 @@ public class SymbolResolver extends BLangNodeTransformer<SymbolResolver.Analyzer
                                                           BSymbol owner, Location pos) {
 
         BTypeSymbol intersectionTypeSymbol =
-                Symbols.createTypeSymbol(SymTag.INTERSECTION_TYPE, 0, Names.EMPTY, pkgId, null, owner, pos, VIRTUAL);
+                Symbols.createTypeSymbol(SymTag.INTERSECTION_TYPE, Flags.asMask(EnumSet.of(Flag.PUBLIC)), Names.EMPTY,
+                        pkgId, null, owner, pos, VIRTUAL);
 
         BIntersectionType intersectionType =
                 new BIntersectionType(intersectionTypeSymbol, constituentBTypes, effectiveType);

@@ -23,7 +23,6 @@ import io.ballerina.tools.diagnostics.Location;
 import org.ballerinalang.model.Name;
 import org.ballerinalang.model.TreeBuilder;
 import org.ballerinalang.model.elements.Flag;
-import org.ballerinalang.model.elements.PackageID;
 import org.ballerinalang.model.tree.NodeKind;
 import org.ballerinalang.model.types.SelectivelyImmutableReferenceType;
 import org.ballerinalang.model.types.TypeKind;
@@ -107,7 +106,6 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -116,7 +114,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -1345,25 +1342,24 @@ public class Types {
         return constraint;
     }
 
-    boolean isSelectivelyImmutableType(BType type, PackageID packageID) {
-        return isSelectivelyImmutableType(type, new HashSet<>(), false, packageID);
+    boolean isSelectivelyImmutableType(BType type) {
+        return isSelectivelyImmutableType(type, new HashSet<>(), false);
     }
 
-    boolean isSelectivelyImmutableType(BType type, boolean forceCheck, PackageID packageID) {
-        return isSelectivelyImmutableType(type, new HashSet<>(), forceCheck, packageID);
+    boolean isSelectivelyImmutableType(BType type, boolean forceCheck) {
+        return isSelectivelyImmutableType(type, new HashSet<>(), forceCheck);
     }
 
-    public boolean isSelectivelyImmutableType(BType type, Set<BType> unresolvedTypes, PackageID packageID) {
-        return isSelectivelyImmutableType(type, unresolvedTypes, false, packageID);
+    public boolean isSelectivelyImmutableType(BType type, Set<BType> unresolvedTypes) {
+        return isSelectivelyImmutableType(type, unresolvedTypes, false);
     }
 
-    private boolean isSelectivelyImmutableType(BType type, Set<BType> unresolvedTypes, boolean forceCheck,
-                                               PackageID packageID) {
-        return isSelectivelyImmutableType(type, false, unresolvedTypes, forceCheck, packageID);
+    private boolean isSelectivelyImmutableType(BType type, Set<BType> unresolvedTypes, boolean forceCheck) {
+        return isSelectivelyImmutableType(type, false, unresolvedTypes, forceCheck);
     }
 
     private boolean isSelectivelyImmutableType(BType input, boolean disallowReadOnlyObjects, Set<BType> unresolvedTypes,
-                                               boolean forceCheck, PackageID packageID) {
+                                               boolean forceCheck) {
         BType type = getReferredType(input);
 
         if (isInherentlyImmutableType(type) || !(type instanceof SelectivelyImmutableReferenceType)) {
@@ -1375,8 +1371,7 @@ public class Types {
             return true;
         }
 
-        if (!forceCheck &&
-                getImmutableType(symTable, packageID, (SelectivelyImmutableReferenceType) type).isPresent()) {
+        if (!forceCheck && ((SelectivelyImmutableReferenceType) type).getImmutableType() != null) {
             return true;
         }
 
@@ -1392,12 +1387,12 @@ public class Types {
             case TypeTags.ARRAY:
                 BType elementType = ((BArrayType) type).eType;
                 return isInherentlyImmutableType(elementType) ||
-                        isSelectivelyImmutableType(elementType, unresolvedTypes, forceCheck, packageID);
+                        isSelectivelyImmutableType(elementType, unresolvedTypes, forceCheck);
             case TypeTags.TUPLE:
                 BTupleType tupleType = (BTupleType) type;
                 for (BType tupMemType : tupleType.tupleTypes) {
                     if (!isInherentlyImmutableType(tupMemType) &&
-                            !isSelectivelyImmutableType(tupMemType, unresolvedTypes, forceCheck, packageID)) {
+                            !isSelectivelyImmutableType(tupMemType, unresolvedTypes, forceCheck)) {
                         return false;
                     }
                 }
@@ -1408,14 +1403,14 @@ public class Types {
                 }
 
                 return isInherentlyImmutableType(tupRestType) ||
-                        isSelectivelyImmutableType(tupRestType, unresolvedTypes, forceCheck, packageID);
+                        isSelectivelyImmutableType(tupRestType, unresolvedTypes, forceCheck);
             case TypeTags.RECORD:
                 BRecordType recordType = (BRecordType) type;
                 for (BField field : recordType.fields.values()) {
                     BType fieldType = field.type;
                     if (!Symbols.isFlagOn(field.symbol.flags, Flags.OPTIONAL) &&
                             !isInherentlyImmutableType(fieldType) &&
-                            !isSelectivelyImmutableType(fieldType, unresolvedTypes, forceCheck, packageID)) {
+                            !isSelectivelyImmutableType(fieldType, unresolvedTypes, forceCheck)) {
                         return false;
                     }
                 }
@@ -1423,14 +1418,14 @@ public class Types {
             case TypeTags.MAP:
                 BType constraintType = ((BMapType) type).constraint;
                 return isInherentlyImmutableType(constraintType) ||
-                        isSelectivelyImmutableType(constraintType, unresolvedTypes, forceCheck, packageID);
+                        isSelectivelyImmutableType(constraintType, unresolvedTypes, forceCheck);
             case TypeTags.OBJECT:
                 BObjectType objectType = (BObjectType) type;
 
                 for (BField field : objectType.fields.values()) {
                     BType fieldType = field.type;
                     if (!isInherentlyImmutableType(fieldType) &&
-                            !isSelectivelyImmutableType(fieldType, unresolvedTypes, forceCheck, packageID)) {
+                            !isSelectivelyImmutableType(fieldType, unresolvedTypes, forceCheck)) {
                         return false;
                     }
                 }
@@ -1438,22 +1433,22 @@ public class Types {
             case TypeTags.TABLE:
                 BType tableConstraintType = ((BTableType) type).constraint;
                 return isInherentlyImmutableType(tableConstraintType) ||
-                        isSelectivelyImmutableType(tableConstraintType, unresolvedTypes, forceCheck, packageID);
+                        isSelectivelyImmutableType(tableConstraintType, unresolvedTypes, forceCheck);
             case TypeTags.UNION:
                 boolean readonlyIntersectionExists = false;
                 for (BType memberType : ((BUnionType) type).getMemberTypes()) {
                     if (isInherentlyImmutableType(memberType) ||
-                            isSelectivelyImmutableType(memberType, unresolvedTypes, forceCheck, packageID)) {
+                            isSelectivelyImmutableType(memberType, unresolvedTypes, forceCheck)) {
                         readonlyIntersectionExists = true;
                     }
                 }
                 return readonlyIntersectionExists;
             case TypeTags.INTERSECTION:
                 return isSelectivelyImmutableType(((BIntersectionType) type).effectiveType, unresolvedTypes,
-                                                  forceCheck, packageID);
+                                                  forceCheck);
             case TypeTags.TYPEREFDESC:
                 return isSelectivelyImmutableType(((BTypeReferenceType) type).referredType, unresolvedTypes,
-                        forceCheck, packageID);
+                        forceCheck);
 
         }
         return false;
@@ -4760,31 +4755,31 @@ public class Types {
         return false;
     }
 
-    public BType getRemainingMatchExprType(BType originalType, BType typeToRemove, SymbolEnv env) {
+    public BType getRemainingMatchExprType(BType originalType, BType typeToRemove) {
         switch (originalType.tag) {
             case TypeTags.UNION:
                 return getRemainingType((BUnionType) originalType, getAllTypes(typeToRemove, true));
             case TypeTags.FINITE:
                 return getRemainingType((BFiniteType) originalType, getAllTypes(typeToRemove, true));
             case TypeTags.TUPLE:
-                return getRemainingType((BTupleType) originalType, typeToRemove, env);
+                return getRemainingType((BTupleType) originalType, typeToRemove);
             default:
                 return originalType;
         }
     }
 
-    private BType getRemainingType(BTupleType originalType, BType typeToRemove, SymbolEnv env) {
+    private BType getRemainingType(BTupleType originalType, BType typeToRemove) {
         switch (typeToRemove.tag) {
             case TypeTags.TUPLE:
-                return getRemainingType(originalType, (BTupleType) typeToRemove, env);
+                return getRemainingType(originalType, (BTupleType) typeToRemove);
             case TypeTags.ARRAY:
-                return getRemainingType(originalType, (BArrayType) typeToRemove, env);
+                return getRemainingType(originalType, (BArrayType) typeToRemove);
             default:
                 return originalType;
         }
     }
 
-    private BType getRemainingType(BTupleType originalType, BTupleType typeToRemove, SymbolEnv env) {
+    private BType getRemainingType(BTupleType originalType, BTupleType typeToRemove) {
         if (originalType.restType != null) {
             return originalType;
         }
@@ -4796,7 +4791,7 @@ public class Types {
         }
         List<BType> tupleTypes = new ArrayList<>();
         for (int i = 0; i < originalTupleTypes.size(); i++) {
-            tupleTypes.add(getRemainingMatchExprType(originalTupleTypes.get(i), typesToRemove.get(i), env));
+            tupleTypes.add(getRemainingMatchExprType(originalTupleTypes.get(i), typesToRemove.get(i)));
         }
         if (typeToRemove.restType == null) {
             return new BTupleType(tupleTypes);
@@ -4805,25 +4800,25 @@ public class Types {
             return originalType;
         }
         for (int i = typesToRemove.size(); i < originalTupleTypes.size(); i++) {
-            tupleTypes.add(getRemainingMatchExprType(originalTupleTypes.get(i), typeToRemove.restType, env));
+            tupleTypes.add(getRemainingMatchExprType(originalTupleTypes.get(i), typeToRemove.restType));
         }
         return new BTupleType(tupleTypes);
     }
 
-    private BType getRemainingType(BTupleType originalType, BArrayType typeToRemove, SymbolEnv env) {
+    private BType getRemainingType(BTupleType originalType, BArrayType typeToRemove) {
         BType eType = typeToRemove.eType;
         List<BType> tupleTypes = new ArrayList<>();
         for (BType tupleType : originalType.tupleTypes) {
-            tupleTypes.add(getRemainingMatchExprType(tupleType, eType, env));
+            tupleTypes.add(getRemainingMatchExprType(tupleType, eType));
         }
         BTupleType remainingType = new BTupleType(tupleTypes);
         if (originalType.restType != null) {
-            remainingType.restType = getRemainingMatchExprType(originalType.restType, eType, env);
+            remainingType.restType = getRemainingMatchExprType(originalType.restType, eType);
         }
         return remainingType;
     }
 
-    public BType getRemainingType(BType originalType, BType typeToRemove, SymbolEnv env) {
+    public BType getRemainingType(BType originalType, BType typeToRemove) {
         BType remainingType = originalType;
 
         if (originalType.tag == TypeTags.INTERSECTION) {
@@ -4841,9 +4836,9 @@ public class Types {
                                                                                           getAllTypes(remainingType,
                                                                                                       true)));
                 if (typeRemovedFromOriginalUnionType == symTable.nullSet ||
-                        isSubTypeOfReadOnly(typeRemovedFromOriginalUnionType, env) ||
-                        isSubTypeOfReadOnly(remainingType, env) ||
-                        narrowsToUnionOfImmutableTypesOrDistinctBasicTypes(remainingType, typeToRemove, env)) {
+                        isSubTypeOfReadOnly(typeRemovedFromOriginalUnionType) ||
+                        isSubTypeOfReadOnly(remainingType) ||
+                        narrowsToUnionOfImmutableTypesOrDistinctBasicTypes(remainingType, typeToRemove)) {
                     return remainingType;
                 }
 
@@ -4863,7 +4858,7 @@ public class Types {
                 if (refType.tag != TypeTags.UNION && refType.tag != TypeTags.FINITE) {
                     return originalType;
                 }
-                return getRemainingType(refType, typeToRemove, env);
+                return getRemainingType(refType, typeToRemove);
         }
 
         if (Symbols.isFlagOn(getReferredType(originalType).flags, Flags.READONLY)) {
@@ -4882,7 +4877,7 @@ public class Types {
         if (unionOriginalType && referredTypeToRemove.tag == UNION) {
             BType typeToRemoveFrom = originalType;
             for (BType memberTypeToRemove : ((BUnionType) referredTypeToRemove).getMemberTypes()) {
-                remainingType =  getRemainingType(typeToRemoveFrom, memberTypeToRemove, env);
+                remainingType =  getRemainingType(typeToRemoveFrom, memberTypeToRemove);
                 typeToRemoveFrom = remainingType;
             }
 
@@ -4892,10 +4887,9 @@ public class Types {
         return originalType;
     }
 
-    private boolean isSubTypeOfReadOnly(BType type, SymbolEnv env) {
+    private boolean isSubTypeOfReadOnly(BType type) {
         return isInherentlyImmutableType(type) ||
-                (isSelectivelyImmutableType(type, env.enclPkg.packageID) &&
-                        Symbols.isFlagOn(type.flags, Flags.READONLY));
+                (isSelectivelyImmutableType(type) && Symbols.isFlagOn(type.flags, Flags.READONLY));
     }
 
     private boolean isClosedRecordTypes(BType type) {
@@ -5001,15 +4995,14 @@ public class Types {
         return true;
     }
 
-    private boolean narrowsToUnionOfImmutableTypesOrDistinctBasicTypes(BType remainingType, BType typeToRemove,
-                                                                       SymbolEnv env) {
+    private boolean narrowsToUnionOfImmutableTypesOrDistinctBasicTypes(BType remainingType, BType typeToRemove) {
         BType referredRemainingType = getReferredType(remainingType);
         if (referredRemainingType.tag != UNION) {
             return false;
         }
 
         LinkedHashSet<BType> mutableRemainingTypes =
-                filterMutableMembers(((BUnionType) referredRemainingType).getMemberTypes(), env);
+                filterMutableMembers(((BUnionType) referredRemainingType).getMemberTypes());
         remainingType = mutableRemainingTypes.size() == 1 ? mutableRemainingTypes.iterator().next() :
                 BUnionType.create(null, mutableRemainingTypes);
 
@@ -5017,7 +5010,7 @@ public class Types {
 
         if (referredTypeToRemove.tag == UNION) {
             LinkedHashSet<BType> mutableTypesToRemove =
-                    filterMutableMembers(((BUnionType) referredTypeToRemove).getMemberTypes(), env);
+                    filterMutableMembers(((BUnionType) referredTypeToRemove).getMemberTypes());
             typeToRemove = mutableTypesToRemove.size() == 1 ? mutableTypesToRemove.iterator().next() :
                     BUnionType.create(null, mutableTypesToRemove);
         } else {
@@ -5027,12 +5020,12 @@ public class Types {
         return removesDistinctBasicTypes(typeToRemove, remainingType);
     }
 
-    private LinkedHashSet<BType> filterMutableMembers(LinkedHashSet<BType> types, SymbolEnv env) {
+    private LinkedHashSet<BType> filterMutableMembers(LinkedHashSet<BType> types) {
         LinkedHashSet<BType> remainingMemberTypes = new LinkedHashSet<>();
 
         for (BType type : types) {
             BType referredType = getReferredType(type);
-            if (!isSubTypeOfReadOnly(referredType, env)) {
+            if (!isSubTypeOfReadOnly(referredType)) {
                 remainingMemberTypes.add(referredType);
             }
         }
@@ -5117,7 +5110,7 @@ public class Types {
                     return bType;
                 }
 
-                if (!isSelectivelyImmutableType(bType, new HashSet<>(), env.enclPkg.packageID)) {
+                if (!isSelectivelyImmutableType(bType, new HashSet<>())) {
                     return symTable.semanticError;
                 }
 
@@ -6568,50 +6561,6 @@ public class Types {
         BLangLiteral expr1 = (BLangLiteral) type1.getValueSpace().iterator().next();
         BLangLiteral expr2 = (BLangLiteral) type2.getValueSpace().iterator().next();
         return expr1.value.equals(expr2.value);
-    }
-
-    public static void addImmutableType(SymbolTable symTable, PackageID packageId,
-                                        SelectivelyImmutableReferenceType type, BIntersectionType immutableType) {
-
-        Map<String, Map<SelectivelyImmutableReferenceType, BIntersectionType>> immutableTypeMaps =
-                symTable.immutableTypeMaps;
-
-        String packageIdString = getPackageIdString(packageId);
-
-        Map<SelectivelyImmutableReferenceType, BIntersectionType> moduleImmutableTypeMap =
-                immutableTypeMaps.get(packageIdString);
-
-        if (moduleImmutableTypeMap == null) {
-            moduleImmutableTypeMap = new HashMap<>();
-            immutableTypeMaps.put(packageIdString, moduleImmutableTypeMap);
-        }
-
-        moduleImmutableTypeMap.put(type, immutableType);
-    }
-
-    public static Optional<BIntersectionType> getImmutableType(SymbolTable symTable, PackageID packageId,
-                                                               SelectivelyImmutableReferenceType type) {
-        Map<String, Map<SelectivelyImmutableReferenceType, BIntersectionType>> immutableTypeMaps =
-                symTable.immutableTypeMaps;
-
-        String packageIdString = getPackageIdString(packageId);
-
-        Map<SelectivelyImmutableReferenceType, BIntersectionType> moduleImmutableTypeMap =
-                immutableTypeMaps.get(packageIdString);
-
-        if (moduleImmutableTypeMap == null) {
-            return Optional.empty();
-        }
-
-        if (moduleImmutableTypeMap.containsKey(type)) {
-            return Optional.of(moduleImmutableTypeMap.get(type));
-        }
-
-        return Optional.empty();
-    }
-
-    public static String getPackageIdString(PackageID packageID) {
-        return packageID.isTestPkg ? packageID.toString() + "_testable" : packageID.toString();
     }
 
     private static class ListenerValidationModel {

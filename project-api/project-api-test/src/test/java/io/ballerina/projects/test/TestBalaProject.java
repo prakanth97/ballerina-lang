@@ -25,7 +25,6 @@ import io.ballerina.projects.EmitResult;
 import io.ballerina.projects.JBallerinaBackend;
 import io.ballerina.projects.JvmTarget;
 import io.ballerina.projects.Module;
-import io.ballerina.projects.ModuleDescriptor;
 import io.ballerina.projects.ModuleId;
 import io.ballerina.projects.ModuleMd;
 import io.ballerina.projects.ModuleName;
@@ -131,8 +130,8 @@ public class TestBalaProject {
         PackageResolution resolution = currentPackage.getResolution();
         DependencyGraph<ResolvedPackageDependency> packageDescriptorDependencyGraph = resolution.dependencyGraph();
         Assert.assertEquals(packageDescriptorDependencyGraph.getNodes().size(), 1);
-        DependencyGraph<ModuleDescriptor> moduleDescriptorDependencyGraph = currentPackage.moduleDependencyGraph();
-        Assert.assertEquals(moduleDescriptorDependencyGraph.getNodes().size(), 3);
+        DependencyGraph<ModuleId> moduleIdDependencyGraph = currentPackage.moduleDependencyGraph();
+        Assert.assertEquals(moduleIdDependencyGraph.getNodes().size(), 3);
 
         // compiler plugin
         Optional<CompilerPluginDescriptor> pluginDescriptor = currentPackage.compilerPluginDescriptor();

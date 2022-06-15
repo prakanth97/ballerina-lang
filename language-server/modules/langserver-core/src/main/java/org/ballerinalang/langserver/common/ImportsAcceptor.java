@@ -20,7 +20,6 @@ import io.ballerina.compiler.syntax.tree.ImportDeclarationNode;
 import io.ballerina.projects.Project;
 import org.ballerinalang.langserver.codeaction.CodeActionModuleId;
 import org.ballerinalang.langserver.common.utils.CommonUtil;
-import org.ballerinalang.langserver.common.utils.ModuleUtil;
 import org.ballerinalang.langserver.commons.DocumentServiceContext;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
@@ -84,7 +83,7 @@ public class ImportsAcceptor {
                 String pkgName;
 
                 String moduleName = codeActionModuleId.moduleName();
-                String modulePrefix = ModuleUtil.escapeModuleName(moduleName).replaceAll(".*\\.", "");
+                String modulePrefix = CommonUtil.escapeModuleName(moduleName).replaceAll(".*\\.", "");
                 if (!codeActionModuleId.modulePrefix().isEmpty() &&
                         !modulePrefix.equals(codeActionModuleId.modulePrefix())) {
                     moduleName = codeActionModuleId.moduleName() + " as " + codeActionModuleId.modulePrefix();

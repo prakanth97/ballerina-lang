@@ -43,6 +43,7 @@ public class BTableType extends BType implements TableType {
     public Location keyPos;
     public boolean isTypeInlineDefined;
     public Location constraintPos;
+    public BIntersectionType immutableType;
 
     private BIntersectionType intersectionType = null;
 
@@ -98,6 +99,16 @@ public class BTableType extends BType implements TableType {
     @Override
     public void accept(TypeVisitor visitor) {
         visitor.visit(this);
+    }
+
+    @Override
+    public BIntersectionType getImmutableType() {
+        return immutableType;
+    }
+
+    @Override
+    public void unsetImmutableType() {
+        this.immutableType = null;
     }
 
     @Override

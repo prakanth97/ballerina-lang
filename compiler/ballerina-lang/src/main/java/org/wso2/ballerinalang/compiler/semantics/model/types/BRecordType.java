@@ -47,6 +47,7 @@ public class BRecordType extends BStructureType implements RecordType {
     public BType restFieldType;
     public Boolean isAnyData = null;
 
+    public BIntersectionType immutableType;
     public BRecordType mutableType;
 
     private BIntersectionType intersectionType = null;
@@ -100,6 +101,16 @@ public class BRecordType extends BStructureType implements RecordType {
             return !Symbols.isFlagOn(this.flags, Flags.READONLY) ? sb.toString() : sb.toString().concat(" & readonly");
         }
         return this.tsymbol.toString();
+    }
+
+    @Override
+    public BIntersectionType getImmutableType() {
+        return this.immutableType;
+    }
+
+    @Override
+    public void unsetImmutableType() {
+        this.immutableType = null;
     }
 
     @Override

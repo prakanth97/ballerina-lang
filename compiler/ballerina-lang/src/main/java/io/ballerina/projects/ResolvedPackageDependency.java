@@ -22,7 +22,7 @@ package io.ballerina.projects;
  *
  * @since 2.0.0
  */
-public class ResolvedPackageDependency extends PackageDependency implements Comparable<ResolvedPackageDependency> {
+public class ResolvedPackageDependency extends PackageDependency {
     private final Package resolvedPackage;
     private final DependencyResolutionType dependencyResolvedType;
 
@@ -60,11 +60,5 @@ public class ResolvedPackageDependency extends PackageDependency implements Comp
     @Override
     public int hashCode() {
         return super.hashCode();
-    }
-
-    @Override
-    public int compareTo(ResolvedPackageDependency other) {
-        return this.resolvedPackage.descriptor().toString().compareTo(
-                other.resolvedPackage.descriptor().toString());
     }
 }

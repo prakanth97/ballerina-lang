@@ -33,7 +33,7 @@ import io.ballerina.compiler.syntax.tree.PositionalArgumentNode;
 import io.ballerina.compiler.syntax.tree.ReturnStatementNode;
 import io.ballerina.compiler.syntax.tree.SpecificFieldNode;
 import io.ballerina.compiler.syntax.tree.VariableDeclarationNode;
-import org.ballerinalang.langserver.common.utils.PositionUtil;
+import org.ballerinalang.langserver.common.utils.CommonUtil;
 
 import java.util.Optional;
 
@@ -148,13 +148,13 @@ public class MatchedExpressionNodeResolver extends NodeTransformer<Optional<Expr
 
     @Override
     public Optional<ExpressionNode> transform(IndexedExpressionNode node) {
-        if (PositionUtil.isWithinLineRange(matchedNode.lineRange(), node.containerExpression().lineRange())) {
+        if (CommonUtil.isWithinLineRange(matchedNode.lineRange(), node.containerExpression().lineRange())) {
             return Optional.of(node.containerExpression());
         }
         
         if (!node.keyExpression().isEmpty()) {
             for (ExpressionNode expressionNode : node.keyExpression()) {
-                if (PositionUtil.isWithinLineRange(matchedNode.lineRange(), expressionNode.lineRange())) {
+                if (CommonUtil.isWithinLineRange(matchedNode.lineRange(), expressionNode.lineRange())) {
                     return Optional.of(expressionNode);
                 }
             }

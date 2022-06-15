@@ -287,7 +287,7 @@ public class JSONStampInbuiltFunctionTest {
         Assert.assertEquals(
                 ((BMap<String, BString>) ((BError) results).getDetails()).get(StringUtils.fromString("message"))
                         .toString(),
-                "'map<json>' value cannot be converted to 'StringMap': " +
+                "'map<json>' value cannot be converted to 'map<string>': " +
                         "\n\t\tmap field 'age' should be of type 'string', found '23'");
     }
 

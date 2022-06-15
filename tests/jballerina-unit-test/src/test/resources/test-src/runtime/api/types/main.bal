@@ -16,12 +16,10 @@
 
 import ballerina/test;
 import testorg/runtime_api_types.objects;
-import runtime_api_types.typeref;
 
 objects:PublicClientObject obj = new ();
 
 public function main() {
-    typeref:validateTypeRef();
     testRemoteFunctionParameters();
     testFunctionToString();
     testParamTypesString();

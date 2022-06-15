@@ -433,16 +433,11 @@ public class BIRPackageSymbolEnter {
         }
 
         // Read annotation attachments
-        defineAnnotAttachmentSymbols(dataInStream, invokableSymbol);
+        // Skip annotation attachments for now
+        dataInStream.skip(dataInStream.readLong());
 
-        BTypeSymbol tsymbol = invokableSymbol.type.tsymbol;
-        if (tsymbol == null) {
-            // Skip return type annotations
-            dataInStream.skip(dataInStream.readLong());
-        } else {
-            ((BInvokableTypeSymbol) tsymbol).returnTypeAnnots.addAll(readAnnotAttachmentSymbols(dataInStream,
-                                                                                                invokableSymbol));
-        }
+        // Skip return type annotations
+        dataInStream.skip(dataInStream.readLong());
 
         // set parameter symbols to the function symbol
         setParamSymbols(invokableSymbol, dataInStream);
@@ -921,24 +916,18 @@ public class BIRPackageSymbolEnter {
     }
 
     private void defineAnnotAttachmentSymbols(DataInputStream dataInStream, Annotatable owner) throws IOException {
-        ((List<BAnnotationAttachmentSymbol>) owner.getAnnotations()).addAll(readAnnotAttachmentSymbols(dataInStream,
-                                                                                                     (BSymbol) owner));
-    }
-
-    private List<BAnnotationAttachmentSymbol> readAnnotAttachmentSymbols(DataInputStream dataInStream, BSymbol owner)
-            throws IOException {
         dataInStream.readLong(); // Read and skip annotation symbol info length.
         int annotSymbolCount = dataInStream.readInt();
 
         if (annotSymbolCount == 0) {
-            return new ArrayList<>(0);
+            return;
         }
 
-        List<BAnnotationAttachmentSymbol> annotationAttachmentSymbols = new ArrayList<>(annotSymbolCount);
+        List<BAnnotationAttachmentSymbol> annotationAttachmentSymbols =
+                (List<BAnnotationAttachmentSymbol>) owner.getAnnotations();
         for (int j = 0; j < annotSymbolCount; j++) {
-            annotationAttachmentSymbols.add(defineAnnotationAttachmentSymbol(dataInStream, owner));
+            annotationAttachmentSymbols.add(defineAnnotationAttachmentSymbol(dataInStream, (BSymbol) owner));
         }
-        return annotationAttachmentSymbols;
     }
 
     /**

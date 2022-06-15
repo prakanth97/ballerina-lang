@@ -37,8 +37,6 @@ import io.ballerina.projects.Package;
 import io.ballerina.projects.Project;
 import org.ballerinalang.langserver.common.constants.ContextConstants;
 import org.ballerinalang.langserver.common.utils.CommonUtil;
-import org.ballerinalang.langserver.common.utils.DefaultValueGenerationUtil;
-import org.ballerinalang.langserver.common.utils.NameUtil;
 import org.ballerinalang.langserver.commons.HoverContext;
 import org.ballerinalang.langserver.util.MarkupUtils;
 import org.eclipse.lsp4j.Hover;
@@ -162,28 +160,27 @@ public class HoverObjectResolver {
             params.add(MarkupUtils.header(3, ContextConstants.PARAM_TITLE) + CommonUtil.MD_LINE_SEPARATOR);
             params.addAll(functionSymbol.typeDescriptor().params().get().stream().map(param -> {
                 if (param.getName().isEmpty()) {
-                    return MarkupUtils.quotedString(NameUtil
+                    return MarkupUtils.quotedString(CommonUtil
                             .getModifiedTypeName(context, param.typeDescriptor()));
                 }
                 String paramName = param.getName().get();
                 String desc = paramsMap.get(paramName);
                 String defaultValueEdit = "";
                 if (param.paramKind() == ParameterKind.DEFAULTABLE) {
-                    Optional<String> defaultValueForParam = DefaultValueGenerationUtil
-                            .getDefaultValueForType(param.typeDescriptor());
+                    Optional<String> defaultValueForParam = CommonUtil.getDefaultValueForType(param.typeDescriptor());
                     if (defaultValueForParam.isPresent()) {
                         defaultValueEdit = MarkupUtils
                                 .quotedString(String.format("(default: %s)", defaultValueForParam.get()));
                     }
                 }
-                return MarkupUtils.quotedString(NameUtil.getModifiedTypeName(context,
+                return MarkupUtils.quotedString(CommonUtil.getModifiedTypeName(context,
                         param.typeDescriptor())) + " "
                         + MarkupUtils.italicString(MarkupUtils.boldString(paramName)) + " : " + desc + defaultValueEdit;
             }).collect(Collectors.toList()));
 
             Optional<ParameterSymbol> restParam = functionSymbol.typeDescriptor().restParam();
             if (restParam.isPresent()) {
-                String modifiedTypeName = NameUtil.getModifiedTypeName(context, restParam.get().typeDescriptor());
+                String modifiedTypeName = CommonUtil.getModifiedTypeName(context, restParam.get().typeDescriptor());
                 StringBuilder restParamBuilder = new StringBuilder(MarkupUtils.quotedString(modifiedTypeName + "..."));
                 if (restParam.get().getName().isPresent()) {
                     restParamBuilder.append(" ")
@@ -197,7 +194,7 @@ public class HoverObjectResolver {
         }
         if (documentation.get().returnDescription().isPresent()) {
             TypeSymbol returnTypeDesc = functionSymbol.typeDescriptor().returnTypeDescriptor().orElseThrow();
-            String returnTypeName = MarkupUtils.quotedString(NameUtil.getModifiedTypeName(context, returnTypeDesc));
+            String returnTypeName = MarkupUtils.quotedString(CommonUtil.getModifiedTypeName(context, returnTypeDesc));
             String returnDoc = MarkupUtils.header(3, ContextConstants.RETURN_TITLE) + CommonUtil.MD_LINE_SEPARATOR +
                     returnTypeName + " : " + documentation.get().returnDescription().get();
             hoverContent.add(returnDoc);
@@ -221,14 +218,14 @@ public class HoverObjectResolver {
             params.addAll(recordType.fieldDescriptors().entrySet().stream()
                     .map(fieldEntry -> {
                         String desc = paramsMap.get(fieldEntry.getKey());
-                        String typeName = NameUtil
+                        String typeName = CommonUtil
                                 .getModifiedTypeName(context, fieldEntry.getValue().typeDescriptor());
                         return MarkupUtils.quotedString(typeName) + " "
                                 + MarkupUtils.italicString(MarkupUtils.boldString(fieldEntry.getKey())) + " : " + desc;
                     }).collect(Collectors.toList()));
             Optional<TypeSymbol> restTypeDesc = recordType.restTypeDescriptor();
             restTypeDesc.ifPresent(typeSymbol ->
-                    params.add(MarkupUtils.quotedString(NameUtil.getModifiedTypeName(context, typeSymbol) + "...")));
+                    params.add(MarkupUtils.quotedString(CommonUtil.getModifiedTypeName(context, typeSymbol) + "...")));
             hoverContent.add(String.join(CommonUtil.MD_LINE_SEPARATOR, params));
         }
 
@@ -258,7 +255,7 @@ public class HoverObjectResolver {
                         .map(fieldEntry -> {
                             String desc = paramsMap.get(fieldEntry.getKey());
                             String modifiedTypeName =
-                                    NameUtil.getModifiedTypeName(context, fieldEntry.getValue().typeDescriptor());
+                                    CommonUtil.getModifiedTypeName(context, fieldEntry.getValue().typeDescriptor());
                             return MarkupUtils.quotedString(modifiedTypeName) + " " +
                                     MarkupUtils.italicString(MarkupUtils.boldString(fieldEntry.getKey()))
                                     + " : " + desc;

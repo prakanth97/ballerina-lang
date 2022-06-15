@@ -28,7 +28,6 @@ import org.ballerinalang.annotation.JavaSPIService;
 import org.ballerinalang.langserver.codeaction.CodeActionNodeValidator;
 import org.ballerinalang.langserver.common.constants.CommandConstants;
 import org.ballerinalang.langserver.common.utils.CommonUtil;
-import org.ballerinalang.langserver.common.utils.PositionUtil;
 import org.ballerinalang.langserver.commons.CodeActionContext;
 import org.ballerinalang.langserver.commons.codeaction.spi.DiagBasedPositionDetails;
 import org.eclipse.lsp4j.CodeAction;
@@ -72,7 +71,7 @@ public class AddExplicitReturnToFunctionCodeAction extends AbstractCodeActionPro
         FunctionBodyBlockNode functionBody = (FunctionBodyBlockNode) functionDefinition.get().functionBody();
         Token closeBraceToken = functionBody.closeBraceToken();
 
-        Range range = PositionUtil.toRange(closeBraceToken.lineRange());
+        Range range = CommonUtil.toRange(closeBraceToken.lineRange());
         String newText = getNewText(functionDefinition.get());
         String uri = context.filePath().toUri().toString();
 

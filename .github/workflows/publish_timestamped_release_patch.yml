@@ -1,4 +1,4 @@
-name: Publish Timestamped Snapshot Artifacts (patch)
+name: Publish Timestamped Snapshot Artifacts
 
 on:
   push:

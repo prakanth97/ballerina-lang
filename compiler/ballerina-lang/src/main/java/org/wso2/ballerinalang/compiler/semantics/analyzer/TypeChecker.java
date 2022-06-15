@@ -3416,12 +3416,14 @@ public class TypeChecker extends SimpleBLangNodeAnalyzer<TypeChecker.AnalyzerDat
 
     private BLangRecordLiteral createRecordLiteralForErrorConstructor(BLangErrorConstructorExpr errorConstructorExpr) {
         BLangRecordLiteral recordLiteral = (BLangRecordLiteral) TreeBuilder.createRecordLiteralNode();
-        for (NamedArgNode namedArg : errorConstructorExpr.getNamedArgs()) {
+        for (BLangNamedArgsExpression namedArg : errorConstructorExpr.namedArgs) {
+
+            BLangNamedArgsExpression clone = nodeCloner.cloneNode(namedArg);
             BLangRecordKeyValueField field =
                     (BLangRecordKeyValueField) TreeBuilder.createRecordKeyValue();
-            field.valueExpr = (BLangExpression) namedArg.getExpression();
+            field.valueExpr = (BLangExpression) clone.getExpression();
             BLangLiteral expr = new BLangLiteral();
-            expr.value = namedArg.getName().value;
+            expr.value = clone.getName().value;
             expr.setBType(symTable.stringType);
             field.key = new BLangRecordKey(expr);
             recordLiteral.fields.add(field);
@@ -6123,8 +6125,7 @@ public class TypeChecker extends SimpleBLangNodeAnalyzer<TypeChecker.AnalyzerDat
     private BType getEffectiveReadOnlyType(Location pos, BType type, AnalyzerData data) {
         BType origTargetType = Types.getReferredType(type);
         if (origTargetType == symTable.readonlyType) {
-            if (types.isInherentlyImmutableType(data.expType) ||
-                    !types.isSelectivelyImmutableType(data.expType, data.env.enclPkg.packageID)) {
+            if (types.isInherentlyImmutableType(data.expType) || !types.isSelectivelyImmutableType(data.expType)) {
                 return origTargetType;
             }
 
@@ -6153,8 +6154,7 @@ public class TypeChecker extends SimpleBLangNodeAnalyzer<TypeChecker.AnalyzerDat
             return origTargetType;
         }
 
-        if (types.isInherentlyImmutableType(data.expType) ||
-                !types.isSelectivelyImmutableType(data.expType, data.env.enclPkg.packageID)) {
+        if (types.isInherentlyImmutableType(data.expType) || !types.isSelectivelyImmutableType(data.expType)) {
             return origTargetType;
         }
 
@@ -7276,7 +7276,7 @@ public class TypeChecker extends SimpleBLangNodeAnalyzer<TypeChecker.AnalyzerDat
 
 
         if (readOnlyConstructorField) {
-            if (types.isSelectivelyImmutableType(fieldType, data.env.enclPkg.packageID)) {
+            if (types.isSelectivelyImmutableType(fieldType)) {
                 fieldType =
                         ImmutableTypeCloner.getImmutableIntersectionType(pos, types, fieldType, data.env, symTable,
                                 anonymousModelHelper, names, new HashSet<>());
@@ -7566,11 +7566,11 @@ public class TypeChecker extends SimpleBLangNodeAnalyzer<TypeChecker.AnalyzerDat
         for (BLangExpression expr : exprs) {
             BType exprType;
             if (expr.getKind() == NodeKind.QUERY_EXPR) {
-                exprType = checkExpr(expr, xmlElementEnv, symTable.xmlType, data);
+                exprType = checkExpr(expr, xmlElementEnv, data.expType, data);
             } else {
                 exprType = checkExpr(expr, xmlElementEnv, data);
             }
-            if (TypeTags.isXMLTypeTag(Types.getReferredType(exprType).tag)) {
+            if (TypeTags.isXMLTypeTag(exprType.tag)) {
                 if (!tempConcatExpressions.isEmpty()) {
                     newChildren.add(getXMLTextLiteral(tempConcatExpressions));
                     tempConcatExpressions = new ArrayList<>();
@@ -7580,10 +7580,9 @@ public class TypeChecker extends SimpleBLangNodeAnalyzer<TypeChecker.AnalyzerDat
             }
 
             BType type = expr.getBType();
-            BType referredType = Types.getReferredType(type);
-            if (referredType.tag >= TypeTags.JSON &&
-                    !TypeTags.isIntegerTypeTag(referredType.tag) && !TypeTags.isStringTypeTag(referredType.tag)) {
-                if (referredType != symTable.semanticError && !TypeTags.isXMLTypeTag(referredType.tag)) {
+            if (type.tag >= TypeTags.JSON &&
+                    !TypeTags.isIntegerTypeTag(type.tag) && !TypeTags.isStringTypeTag(type.tag)) {
+                if (type != symTable.semanticError && !TypeTags.isXMLTypeTag(type.tag)) {
                     dlog.error(expr.pos, DiagnosticErrorCode.INCOMPATIBLE_TYPES,
                             BUnionType.create(null, symTable.intType, symTable.floatType,
                                     symTable.decimalType, symTable.stringType,
@@ -9029,8 +9028,7 @@ public class TypeChecker extends SimpleBLangNodeAnalyzer<TypeChecker.AnalyzerDat
     private void markChildrenAsImmutable(BLangXMLElementLiteral bLangXMLElementLiteral, AnalyzerData data) {
         for (BLangExpression modifiedChild : bLangXMLElementLiteral.modifiedChildren) {
             BType childType = modifiedChild.getBType();
-            if (Symbols.isFlagOn(childType.flags, Flags.READONLY) ||
-                    !types.isSelectivelyImmutableType(childType, data.env.enclPkg.packageID)) {
+            if (Symbols.isFlagOn(childType.flags, Flags.READONLY) || !types.isSelectivelyImmutableType(childType)) {
                 continue;
             }
             modifiedChild.setBType(ImmutableTypeCloner.getEffectiveImmutableType(modifiedChild.pos, types, childType,
@@ -9062,8 +9060,7 @@ public class TypeChecker extends SimpleBLangNodeAnalyzer<TypeChecker.AnalyzerDat
 
         for (BField field : actualObjectType.fields.values()) {
             BType fieldType = field.type;
-            if (!types.isInherentlyImmutableType(fieldType) &&
-                    !types.isSelectivelyImmutableType(fieldType, false, data.env.enclPkg.packageID)) {
+            if (!types.isInherentlyImmutableType(fieldType) && !types.isSelectivelyImmutableType(fieldType, false)) {
                 analyzeObjectConstructor(classDefForConstructor, env, data);
                 hasNeverReadOnlyField = true;
 

@@ -160,12 +160,16 @@ public class PushCommand implements BLauncherCmd {
                     pushPackage(project);
                 } else {
                     if (!balaPath.toFile().exists()) {
-                        throw new ProjectException("path provided for the bala file does not exist: " + balaPath + ".");
+                        throw new ProjectException("provided path does not exist.");
                     }
                     if (!FileUtils.getExtension(balaPath).equals("bala")) {
-                        throw new ProjectException("file provided is not a bala file: " + balaPath + ".");
+                        throw new ProjectException("file provided is not a bala file.");
                     }
-                    validatePackageMdAndBalToml(balaPath);
+                    try {
+                        validatePackageMdAndBalToml(balaPath);
+                    } catch (IOException e) {
+                        throw new ProjectException("error while validating the bala file.", e);
+                    }
                     pushBalaToCustomRepo(balaPath);
                 }
             } else {
@@ -177,25 +181,35 @@ public class PushCommand implements BLauncherCmd {
                 }
                 CentralAPIClient client = new CentralAPIClient(RepoUtils.getRemoteRepoURL(),
                         initializeProxy(settings.getProxy()), getAccessTokenOfCLI(settings));
-                if (balaPath == null) {
-                    pushPackage(project, client);
-                } else {
-                    if (!balaPath.toFile().exists()) {
-                        throw new ProjectException("path provided for the bala file does not exist: " + balaPath
-                                + ".");
+                try {
+                    if (balaPath == null) {
+                        pushPackage(project, client);
+                    } else {
+                        try {
+                            if (!balaPath.toFile().exists()) {
+                                throw new ProjectException("provided path does not exist.");
+                            }
+                            if (!FileUtils.getExtension(balaPath).equals("bala")) {
+                                throw new ProjectException("file provided is not a bala file.");
+                            }
+                            validatePackageMdAndBalToml(balaPath);
+                        } catch (IOException e) {
+                            throw new ProjectException("error while validating the bala file.", e);
+                        }
+                        pushBalaToRemote(balaPath, client);
                     }
-                    if (!FileUtils.getExtension(balaPath).equals("bala")) {
-                        throw new ProjectException("file provided is not a bala file: " + balaPath + ".");
-                    }
-                    validatePackageMdAndBalToml(balaPath);
-                    pushBalaToRemote(balaPath, client);
+                } catch (ProjectException | CentralClientException e) {
+                    CommandUtil.printError(this.errStream, e.getMessage(), null, false);
+                    CommandUtil.exitError(this.exitWhenFinish);
+                    return;
                 }
             }
-        } catch (ProjectException | CentralClientException | SettingsTomlException e) {
+        } catch (ProjectException | SettingsTomlException e) {
             CommandUtil.printError(this.errStream, e.getMessage(), null, false);
             CommandUtil.exitError(this.exitWhenFinish);
             return;
         }
+
 
         if (this.exitWhenFinish) {
             Runtime.getRuntime().exit(0);
@@ -288,13 +302,18 @@ public class PushCommand implements BLauncherCmd {
                             + "' in " + ProjectConstants.BALLERINA_TOML
                             + " file. Run 'bal pack' to recompile and generate the bala.");
         }
-        validatePackageMdAndBalToml(packageBalaFile);
+
+        try {
+            validatePackageMdAndBalToml(packageBalaFile);
+        } catch (IOException e) {
+            throw new ProjectException("error while validating the bala file.", e);
+        }
 
         // bala file path
         return packageBalaFile;
     }
 
-    private static void validatePackageMdAndBalToml(Path balaPath) {
+    private static void validatePackageMdAndBalToml(Path balaPath) throws IOException {
         try (ZipInputStream zip = new ZipInputStream(Files.newInputStream(balaPath, StandardOpenOption.READ))) {
             ZipEntry entry;
             while ((entry = zip.getNextEntry()) != null) {
@@ -306,8 +325,6 @@ public class PushCommand implements BLauncherCmd {
                     return;
                 }
             }
-        } catch (IOException e) {
-            throw new ProjectException("error while validating the bala file: " + e.getMessage(), e);
         }
         throw new ProjectException(ProjectConstants.PACKAGE_MD_FILE_NAME + " is missing in bala file:" + balaPath);
     }

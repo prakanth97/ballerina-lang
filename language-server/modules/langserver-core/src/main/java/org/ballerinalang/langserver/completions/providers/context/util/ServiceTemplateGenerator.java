@@ -46,9 +46,7 @@ import org.ballerinalang.langserver.codeaction.CodeActionModuleId;
 import org.ballerinalang.langserver.common.ImportsAcceptor;
 import org.ballerinalang.langserver.common.utils.CommonKeys;
 import org.ballerinalang.langserver.common.utils.CommonUtil;
-import org.ballerinalang.langserver.common.utils.DefaultValueGenerationUtil;
 import org.ballerinalang.langserver.common.utils.FunctionGenerator;
-import org.ballerinalang.langserver.common.utils.ModuleUtil;
 import org.ballerinalang.langserver.common.utils.SymbolUtil;
 import org.ballerinalang.langserver.commons.BallerinaCompletionContext;
 import org.ballerinalang.langserver.commons.LanguageServerContext;
@@ -296,7 +294,7 @@ public class ServiceTemplateGenerator {
         List<LSPackageLoader.PackageInfo> packages = LSPackageLoader.getInstance(lsContext)
                 .getDistributionRepoPackages();
         packages.forEach(distPackage -> {
-            String orgName = ModuleUtil.escapeModuleName(distPackage.packageOrg().value());
+            String orgName = CommonUtil.escapeModuleName(distPackage.packageOrg().value());
             Project project = ProjectLoader.loadProject(distPackage.sourceRoot());
             PackageCompilation packageCompilation = project.currentPackage().getCompilation();
             project.currentPackage().modules().forEach(module -> {
@@ -398,8 +396,7 @@ public class ServiceTemplateGenerator {
                             parameterSymbol.paramKind() == ParameterKind.REQUIRED).collect(Collectors.toList());
             for (ParameterSymbol parameterSymbol : requiredParams) {
                 args.add("${" + snippetIndex + ":" +
-                        DefaultValueGenerationUtil.getDefaultPlaceholderForType(parameterSymbol.typeDescriptor())
-                                .orElse("") + "}");
+                        CommonUtil.getDefaultPlaceholderForType(parameterSymbol.typeDescriptor()).orElse("") + "}");
                 snippetIndex += 1;
             }
             listenerInitArgs = String.join(",", args);
@@ -417,10 +414,10 @@ public class ServiceTemplateGenerator {
 
         String symbolReference;
         ImportsAcceptor importsAcceptor = new ImportsAcceptor(context);
-        String modulePrefix = ModuleUtil.getModulePrefix(importsAcceptor, currentModuleID,
+        String modulePrefix = CommonUtil.getModulePrefix(importsAcceptor, currentModuleID,
                 serviceSnippet.moduleID, context);
         String moduleAlias = modulePrefix.replace(":", "");
-        String escapedName = ModuleUtil.escapeModuleName(serviceSnippet.moduleID.moduleName());
+        String escapedName = CommonUtil.escapeModuleName(serviceSnippet.moduleID.moduleName());
         String moduleName = escapedName.replaceAll(".*\\.", "");
 
         if (!moduleAlias.isEmpty()) {
@@ -474,8 +471,7 @@ public class ServiceTemplateGenerator {
         if (methodSymbol.typeDescriptor().returnTypeDescriptor().isPresent()) {
             TypeSymbol returnTypeSymbol = methodSymbol.typeDescriptor().returnTypeDescriptor().get();
             if (returnTypeSymbol.typeKind() != TypeDescKind.COMPILATION_ERROR) {
-                Optional<String> defaultReturnValueForType = DefaultValueGenerationUtil
-                        .getDefaultPlaceholderForType(returnTypeSymbol);
+                Optional<String> defaultReturnValueForType = CommonUtil.getDefaultPlaceholderForType(returnTypeSymbol);
                 if (defaultReturnValueForType.isPresent()) {
                     String defaultReturnValue = defaultReturnValueForType.get();
                     if (CommonKeys.PARANTHESES_KEY.equals(defaultReturnValue)) {

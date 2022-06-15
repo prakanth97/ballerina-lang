@@ -32,7 +32,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -46,7 +45,7 @@ public class ModuleCompilation {
     private final PackageCache packageCache;
     private final CompilerContext compilerContext;
 
-    private final DependencyGraph<ModuleDescriptor> dependencyGraph;
+    private final DependencyGraph<ModuleId> dependencyGraph;
     private DiagnosticResult diagnosticResult;
 
     ModuleCompilation(PackageContext packageContext, ModuleContext moduleContext) {
@@ -64,54 +63,41 @@ public class ModuleCompilation {
         compile();
     }
 
-    private DependencyGraph<ModuleDescriptor> buildDependencyGraph() {
-        Map<ModuleDescriptor, Set<ModuleDescriptor>> dependencyDescriptorMap = new HashMap<>();
-        addModuleDependencies(moduleContext.descriptor(), dependencyDescriptorMap);
-        return DependencyGraph.from(dependencyDescriptorMap);
+    private DependencyGraph<ModuleId> buildDependencyGraph() {
+        Map<ModuleId, Set<ModuleId>> dependencyIdMap = new HashMap<>();
+        addModuleDependencies(moduleContext.moduleId(), dependencyIdMap);
+        return DependencyGraph.from(dependencyIdMap);
     }
 
-    private void addModuleDependencies(ModuleDescriptor moduleDescriptor,
-                                       Map<ModuleDescriptor, Set<ModuleDescriptor>> dependencyDescriptorMap) {
-        Optional<Package> pkg = packageCache.getPackage(moduleDescriptor.org(),
-                moduleDescriptor.packageName(), moduleDescriptor.version());
-        if (pkg.isEmpty()) {
-            throw new IllegalStateException("Cannot find a package for the given details, org: "
-                    + moduleDescriptor.org() + ", name: " + moduleDescriptor.packageName()
-                    + ", version: " + moduleDescriptor.version());
-        }
-        Collection<ModuleDescriptor> directDependencies = new HashSet<>(pkg.get().moduleDependencyGraph().
-                getDirectDependencies(moduleDescriptor));
+    private void addModuleDependencies(ModuleId moduleId, Map<ModuleId, Set<ModuleId>> dependencyIdMap) {
+        Package pkg = packageCache.getPackageOrThrow(moduleId.packageId());
+        Collection<ModuleId> directDependencies = new HashSet<>(pkg.moduleDependencyGraph().
+                getDirectDependencies(moduleId));
 
-        ModuleContext moduleCtx = pkg.get().packageContext().moduleContext(moduleDescriptor.name());
+        ModuleContext moduleCtx = pkg.packageContext().moduleContext(moduleId);
         for (ModuleDependency moduleDependency : moduleCtx.dependencies()) {
             PackageId dependentPkgId = moduleDependency.packageDependency().packageId();
-            if (dependentPkgId == pkg.get().packageId()) {
+            if (dependentPkgId == pkg.packageId()) {
                 continue;
             }
-            ModuleDescriptor dependentModuleDescriptor = moduleDependency.descriptor();
-            directDependencies.add(dependentModuleDescriptor);
-            addModuleDependencies(dependentModuleDescriptor, dependencyDescriptorMap);
+            ModuleId dependentModuleId = moduleDependency.moduleId();
+            directDependencies.add(dependentModuleId);
+            addModuleDependencies(dependentModuleId, dependencyIdMap);
         }
 
-        dependencyDescriptorMap.put(moduleDescriptor, new HashSet<>(directDependencies));
-        for (ModuleDescriptor depModuleDescriptor : directDependencies) {
-            addModuleDependencies(depModuleDescriptor, dependencyDescriptorMap);
+        dependencyIdMap.put(moduleId, new HashSet<>(directDependencies));
+        for (ModuleId depModuleId : directDependencies) {
+            addModuleDependencies(depModuleId, dependencyIdMap);
         }
     }
 
     private void compile() {
         // Compile all the modules
         List<Diagnostic> diagnostics = new ArrayList<>();
-        List<ModuleDescriptor> sortedModuleDescriptors = dependencyGraph.toTopologicallySortedList();
-        for (ModuleDescriptor sortedModuleDescriptor : sortedModuleDescriptors) {
-            Optional<Package> pkg = packageCache.getPackage(sortedModuleDescriptor.org(),
-                    sortedModuleDescriptor.packageName(), sortedModuleDescriptor.version());
-            if (pkg.isEmpty()) {
-                throw new IllegalStateException("Cannot find a package for the given details, org: "
-                        + sortedModuleDescriptor.org() + ", name: " + sortedModuleDescriptor.packageName()
-                        + ", version: " + sortedModuleDescriptor.version());
-            }
-            ModuleContext moduleContext = pkg.get().module(sortedModuleDescriptor.name()).moduleContext();
+        List<ModuleId> sortedModuleIds = dependencyGraph.toTopologicallySortedList();
+        for (ModuleId sortedModuleId : sortedModuleIds) {
+            Package pkg = packageCache.getPackageOrThrow(sortedModuleId.packageId());
+            ModuleContext moduleContext = pkg.module(sortedModuleId).moduleContext();
             moduleContext.compile(compilerContext);
             for (Diagnostic diagnostic : moduleContext.diagnostics()) {
                 diagnostics.add(new PackageDiagnostic(diagnostic, moduleContext.descriptor(), moduleContext.project()));

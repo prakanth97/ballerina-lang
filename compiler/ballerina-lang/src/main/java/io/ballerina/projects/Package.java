@@ -15,7 +15,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -156,7 +155,7 @@ public class Package {
         return this.packageContext.getResolution(compilationOptions);
     }
 
-    public DependencyGraph<ModuleDescriptor> moduleDependencyGraph() {
+    public DependencyGraph<ModuleId> moduleDependencyGraph() {
         // Each Package should know the packages that it depends on and packages that depends on it
         // Each Module should know the modules that it depends on and modules that depends on it
         return this.packageContext.moduleDependencyGraph();
@@ -668,12 +667,12 @@ public class Package {
                         packageDescriptor.name(), oldModuleContext.moduleName().moduleNamePart());
                 ModuleDescriptor moduleDescriptor = ModuleDescriptor.from(moduleName, packageDescriptor);
 
-                Map<DocumentId, DocumentContext> srcDocContextMap = new LinkedHashMap<>();
+                Map<DocumentId, DocumentContext> srcDocContextMap = new HashMap<>();
                 for (DocumentId documentId : oldModuleContext.srcDocumentIds()) {
                     srcDocContextMap.put(documentId, oldModuleContext.documentContext(documentId));
                 }
 
-                Map<DocumentId, DocumentContext> testDocContextMap = new LinkedHashMap<>();
+                Map<DocumentId, DocumentContext> testDocContextMap = new HashMap<>();
                 for (DocumentId documentId : oldModuleContext.testSrcDocumentIds()) {
                     testDocContextMap.put(documentId, oldModuleContext.documentContext(documentId));
                 }

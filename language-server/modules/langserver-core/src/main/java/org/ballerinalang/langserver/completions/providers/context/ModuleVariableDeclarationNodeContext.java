@@ -25,6 +25,7 @@ import io.ballerina.compiler.syntax.tree.TypeDescriptorNode;
 import io.ballerina.tools.text.TextRange;
 import org.ballerinalang.annotation.JavaSPIService;
 import org.ballerinalang.langserver.common.utils.CommonUtil;
+import org.ballerinalang.langserver.common.utils.completion.QNameReferenceUtil;
 import org.ballerinalang.langserver.commons.BallerinaCompletionContext;
 import org.ballerinalang.langserver.commons.completion.LSCompletionException;
 import org.ballerinalang.langserver.commons.completion.LSCompletionItem;
@@ -32,7 +33,6 @@ import org.ballerinalang.langserver.completions.CompleteExpressionValidator;
 import org.ballerinalang.langserver.completions.SnippetCompletionItem;
 import org.ballerinalang.langserver.completions.providers.context.util.ModulePartNodeContextUtil;
 import org.ballerinalang.langserver.completions.util.CompletionUtil;
-import org.ballerinalang.langserver.completions.util.QNameRefCompletionUtil;
 import org.ballerinalang.langserver.completions.util.Snippet;
 import org.ballerinalang.langserver.completions.util.SortingUtil;
 
@@ -73,9 +73,9 @@ public class ModuleVariableDeclarationNodeContext extends
             (3) service <cursor>
             (4) isolated service <cursor>
              */
-            if (QNameRefCompletionUtil.onQualifiedNameIdentifier(ctx, ctx.getNodeAtCursor())) {
+            if (QNameReferenceUtil.onQualifiedNameIdentifier(ctx, ctx.getNodeAtCursor())) {
                 QualifiedNameReferenceNode qNameRef = (QualifiedNameReferenceNode) ctx.getNodeAtCursor();
-                List<Symbol> moduleContent = QNameRefCompletionUtil.getModuleContent(ctx, qNameRef,
+                List<Symbol> moduleContent = QNameReferenceUtil.getModuleContent(ctx, qNameRef,
                         ModulePartNodeContextUtil.serviceTypeDescPredicate());
                 completionItems.addAll(this.getCompletionItemList(moduleContent, ctx));
             } else {
@@ -90,7 +90,7 @@ public class ModuleVariableDeclarationNodeContext extends
             completionItems.add(new SnippetCompletionItem(ctx, Snippet.KW_ON.get()));
             resolvedContext = ResolvedContext.SERVICE_TYPEDESC;
         } else if (onSuggestionsAfterQualifiers(ctx, node) &&
-                !QNameRefCompletionUtil.onQualifiedNameIdentifier(ctx, ctx.getNodeAtCursor())) {
+                !QNameReferenceUtil.onQualifiedNameIdentifier(ctx, ctx.getNodeAtCursor())) {
             /*
                 Covers the following.
                 (1) <qualifier> <cursor>
