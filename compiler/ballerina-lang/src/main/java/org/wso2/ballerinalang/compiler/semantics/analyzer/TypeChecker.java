@@ -3416,14 +3416,12 @@ public class TypeChecker extends SimpleBLangNodeAnalyzer<TypeChecker.AnalyzerDat
 
     private BLangRecordLiteral createRecordLiteralForErrorConstructor(BLangErrorConstructorExpr errorConstructorExpr) {
         BLangRecordLiteral recordLiteral = (BLangRecordLiteral) TreeBuilder.createRecordLiteralNode();
-        for (BLangNamedArgsExpression namedArg : errorConstructorExpr.namedArgs) {
-
-            BLangNamedArgsExpression clone = nodeCloner.cloneNode(namedArg);
+        for (NamedArgNode namedArg : errorConstructorExpr.getNamedArgs()) {
             BLangRecordKeyValueField field =
                     (BLangRecordKeyValueField) TreeBuilder.createRecordKeyValue();
-            field.valueExpr = (BLangExpression) clone.getExpression();
+            field.valueExpr = (BLangExpression) namedArg.getExpression();
             BLangLiteral expr = new BLangLiteral();
-            expr.value = clone.getName().value;
+            expr.value = namedArg.getName().value;
             expr.setBType(symTable.stringType);
             field.key = new BLangRecordKey(expr);
             recordLiteral.fields.add(field);
@@ -6459,10 +6457,15 @@ public class TypeChecker extends SimpleBLangNodeAnalyzer<TypeChecker.AnalyzerDat
         for (BLangNamedArgsExpression namedArgsExpression : errorConstructorExpr.namedArgs) {
             BType target = checkErrCtrTargetTypeAndSetSymbol(namedArgsExpression, expectedType);
 
+            namedArgsExpression.cloneAttempt++;
             BLangNamedArgsExpression clone = nodeCloner.cloneNode(namedArgsExpression);
-            BType type = checkExpr(clone, target, data);
+            BType type = checkExprSilent(clone, target, data);
             if (type == symTable.semanticError) {
-                checkExpr(namedArgsExpression, data);
+                if (Types.getReferredType(target).tag == TypeTags.RECORD) {
+                    checkExpr(namedArgsExpression, target, data);
+                } else {
+                    checkExpr(namedArgsExpression, data);
+                }
             } else {
                 checkExpr(namedArgsExpression, target, data);
             }
