@@ -3963,6 +3963,10 @@ public class SemanticAnalyzer extends SimpleBLangNodeAnalyzer<SemanticAnalyzer.A
     }
 
     private void flatMapAndGetObjectTypes(Set<BType> result, BType type) {
+        if (type.tag == TypeTags.TYPEREFDESC) {
+            flatMapAndGetObjectTypes(result, Types.getReferredType(type));
+            return;
+        }
         if (!types.checkListenerCompatibilityAtServiceDecl(type)) {
             return;
         }
@@ -4961,7 +4965,7 @@ public class SemanticAnalyzer extends SimpleBLangNodeAnalyzer<SemanticAnalyzer.A
         }
 
         for (BLangTypeDefinition typeDefinition : bLangPackage.typeDefinitions) {
-            BType bType = typeDefinition.typeNode.getBType();
+            BType bType = Types.getReferredType(typeDefinition.typeNode.getBType());
             if (bType.tag != TypeTags.OBJECT) {
                 continue;
             }
