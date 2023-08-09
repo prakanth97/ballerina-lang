@@ -256,8 +256,7 @@ public class ConstantTypeChecker extends SimpleBLangNodeAnalyzer<ConstantTypeChe
         }
 
         if (literalType.tag == TypeTags.BYTE_ARRAY) {
-            data.resultType = rewriteByteArrayLiteral(literalExpr, data);
-            return;
+            literalType = rewriteByteArrayLiteral(literalExpr, data);
         }
 
         if (literalExpr.isFiniteContext) {
@@ -279,18 +278,13 @@ public class ConstantTypeChecker extends SimpleBLangNodeAnalyzer<ConstantTypeChe
         List<BType> memberTypes = new ArrayList<>();
         for (byte b : values) {
             memberTypes.add(getFiniteType(Byte.toUnsignedInt(b), data.constantSymbol, literalExpr.pos,
-                    symTable.byteType));
+                    symTable.intType));
         }
 
         BType expType = Types.getReferredType(data.expType);
         if (expType.tag == TypeTags.ARRAY && ((BArrayType) expType).state == BArrayState.INFERRED) {
             ((BArrayType) expType).size = memberTypes.size();
             ((BArrayType) expType).state = BArrayState.CLOSED;
-        }
-
-        BArrayType arrayType = new BArrayType(symTable.byteType, null, values.length, BArrayState.CLOSED);
-        if (types.typeIncompatible(literalExpr.pos, arrayType, expType)) {
-            return symTable.semanticError;
         }
 
         return createNewTupleType(literalExpr.pos, memberTypes, data);
